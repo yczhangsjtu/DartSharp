@@ -315,7 +315,7 @@ class ListParser(object):
 
 			curr = elem.span[1]
 
-		if len(elements) == 0 and (self.prefix is None or self.postfix is None):
+		if len(elements) == 0:
 			return None
 
 		if self.postfix is not None:

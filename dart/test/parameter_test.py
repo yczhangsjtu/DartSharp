@@ -1,6 +1,8 @@
 import unittest
 from dart.parameter import NormalParameterItemElement,\
-  NormalParameterItemParser, ThisParameterItemElement, ThisParameterItemParser
+  NormalParameterItemParser, ThisParameterItemElement,\
+  ThisParameterItemParser, ParameterItemParser,\
+  SingleParameterListParser
 
 lazy_set_func="""
 NodeMetadata lazySet(
@@ -136,6 +138,74 @@ class BuildOp {
 }
 """
 
+node_meta_data_class="""
+class NodeMetadata {
+  Iterable<BuildOp> _buildOps;
+  dom.Element _domElement;
+  Iterable<BuildOp> _parentOps;
+  TextStyleBuilders _tsb;
+
+  Color color;
+  bool decoOver;
+  bool decoStrike;
+  bool decoUnder;
+  TextDecorationStyle decorationStyle;
+  String fontFamily;
+  String fontSize;
+  bool fontStyleItalic;
+  FontWeight fontWeight;
+  bool _isBlockElement;
+  bool isNotRenderable;
+  List<String> _styles;
+  bool _stylesFrozen = false;
+
+  dom.Element get domElement => _domElement;
+
+  bool get hasOps => _buildOps != null;
+
+  bool get hasParents => _parentOps != null;
+
+  Iterable<BuildOp> get ops => _buildOps;
+
+  Iterable<BuildOp> get parents => _parentOps;
+
+  TextStyleBuilders get tsb => _tsb;
+
+  set domElement(dom.Element e) {
+    assert(_domElement == null);
+    _domElement = e;
+
+    if (_buildOps != null) {
+      final ops = _buildOps as List;
+      ops.sort((a, b) => a.priority.compareTo(b.priority));
+      _buildOps = List.unmodifiable(ops);
+    }
+  }
+
+  set tsb(TextStyleBuilders tsb) {
+    assert(_tsb == null);
+    _tsb = tsb;
+  }
+
+  bool get isBlockElement {
+    if (_isBlockElement == true) return true;
+    return _buildOps?.where((o) => o.isBlockElement)?.length?.compareTo(0) == 1;
+  }
+
+  void styles(void f(String key, String value)) {
+    _stylesFrozen = true;
+    if (_styles == null) return;
+
+    final iterator = _styles.iterator;
+    while (iterator.moveNext()) {
+      final key = iterator.current;
+      if (!iterator.moveNext()) return;
+      f(key, iterator.current);
+    }
+  }
+}
+"""
+
 class TestParameterElements(unittest.TestCase):
   """TestParameterElements"""
   def test_normal_parameter_item(self):
@@ -219,6 +289,48 @@ class TestParameterElements(unittest.TestCase):
     self.assertEqual(elem.name.content(), "priority")
     self.assertEqual(elem.default_value.content(), "10")
 
+  def test_parameter_item(self):
+    parser = ParameterItemParser()
+
+    pos = lazy_set_func.find("double size")
+    elem = parser.parse(lazy_set_func, pos-2)
+    self.assertEqual(elem.content(), "double size = 1.0")
+    self.assertEqual(elem.textspan(), "  double size = 1.0")
+    self.assertEqual(elem.typename.content(), "double")
+    self.assertEqual(elem.name.content(), "size")
+    self.assertEqual(elem.default_value.content(), "1.0")
+
+    pos = lazy_set_func.find("Iterable<String> stylesPrepend")
+    elem = parser.parse(lazy_set_func, pos-2)
+    self.assertEqual(elem.content(), "Iterable<String> stylesPrepend = null")
+    self.assertEqual(elem.textspan(), "  Iterable<String> stylesPrepend = null")
+    self.assertEqual(elem.typename.content(), "Iterable<String>")
+    self.assertEqual(elem.name.content(), "stylesPrepend")
+    self.assertEqual(elem.default_value.content(), "null")
+
+    pos = build_op_class.find('this.name = "FirstOp"')
+    elem = parser.parse(build_op_class, pos-2)
+    self.assertEqual(elem.content(), 'this.name = "FirstOp"')
+    self.assertEqual(elem.textspan(), '  this.name = "FirstOp"')
+    self.assertEqual(elem.name.content(), "name")
+    self.assertEqual(elem.default_value.content(), '"FirstOp"')
+
+    pos = build_op_class.find("this.priority = 10")
+    elem = parser.parse(build_op_class, pos-2)
+    self.assertEqual(elem.content(), "this.priority = 10")
+    self.assertEqual(elem.textspan(), "  this.priority = 10")
+    self.assertEqual(elem.name.content(), "priority")
+    self.assertEqual(elem.default_value.content(), "10")
+
+  def test_single_parameter_list(self):
+    parser = SingleParameterListParser(allow_trailing_comma=True, curly_brace=True)
+
+    pos = lazy_set_func.find("{")
+    elem = parser.parse(lazy_set_func, pos-1)
+    self.assertEqual(elem[0].content(), "BuildOp buildOp")
+    self.assertEqual(elem[-1].content(), "Iterable<String> stylesPrepend = null")
+    self.assertTrue(elem.has_trailing_comma)
+    self.assertEqual(elem.textspan(), lazy_set_func[pos-1:lazy_set_func.find("}")+1])
 
 if __name__ == '__main__':
   unittest.main()
