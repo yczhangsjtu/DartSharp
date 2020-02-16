@@ -21,10 +21,9 @@ class BasicParser:
 
 		return BasicElement(text, m.start(1) + pos, m.end(1) + pos, (pos, m.end() + pos))
 
-class WordParser(object):
-	"""Parse words in text at given position, get a WordElement"""
+class _WordParser(object):
 	def __init__(self):
-		super(WordParser, self).__init__()
+		super(_WordParser, self).__init__()
 		self.basic_parser = BasicParser(r"\s*\b([_A-Za-z]\w*)\b")
 
 	def parse(self, text, pos):
@@ -32,6 +31,20 @@ class WordParser(object):
 		if basic_elem is None:
 			return None
 		return WordElement(text, basic_elem.start, basic_elem.end, basic_elem.span)
+
+_word_parser = None
+class WordParser:
+	"""Parse words in text at given position, get a WordElement"""
+	def __init__(self):
+		global _word_parser
+		if _word_parser is None:
+			_word_parser = _WordParser()
+
+	def parse(self, text, pos):
+		global _word_parser
+		return _word_parser.parse(text, pos)
+
+
 
 class PlainParser(object):
 	"""Parse plain text at given position, get a basic element"""
@@ -118,10 +131,9 @@ class OrParser(object):
 
 		return None
 
-class StringParser(object):
-	"""StringParser finds next complete string"""
+class _StringParser(object):
 	def __init__(self):
-		super(StringParser, self).__init__()
+		super(_StringParser, self).__init__()
 
 	def parse(self, text, pos):
 		curr = pos
@@ -155,6 +167,18 @@ class StringParser(object):
 			curr += 1
 
 		return None
+
+_string_parser = None
+class StringParser:
+	"""StringParser finds next complete string"""
+	def __init__(self):
+		global _string_parser
+		if _string_parser is None:
+			_string_parser = _StringParser()
+
+	def parse(self, text, pos):
+		global _string_parser
+		return _string_parser.parse(text, pos)
 
 class ListParser(object):
 	"""ListParser identifies a list of items of the same type,
@@ -210,10 +234,9 @@ class ListParser(object):
 
 		return ListElement(text, elements, (pos, curr), has_trailing)
 
-class TypeNameParser(object):
-	"""TypeNameParser recognizes type names"""
+class _TypeNameParser(object):
 	def __init__(self):
-		super(TypeNameParser, self).__init__()
+		super(_TypeNameParser, self).__init__()
 		self.parser = OrParser([
 			JoinParser([
 				WordParser(),
@@ -242,3 +265,15 @@ class TypeNameParser(object):
 			return TypeNameElement(text, elem[0], elem[1], elem.span)
 
 		raise Exception("This element should be either WordElement or JoinElement")
+
+_typename_parser = None
+class TypeNameParser:
+	"""TypeNameParser recognizes type names"""
+	def __init__(self):
+		global _typename_parser
+		if _typename_parser is None:
+			_typename_parser = _TypeNameParser()
+
+	def parse(self, text, pos):
+		global _typename_parser
+		return _typename_parser.parse(text, pos)
