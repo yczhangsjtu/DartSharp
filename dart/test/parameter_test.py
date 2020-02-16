@@ -11,15 +11,16 @@ NodeMetadata lazySet(
   bool decoUnder,
   TextDecorationStyle decorationStyle,
   CssBorderStyle decorationStyleFromCssBorderStyle,
-  String fontFamily,
+  String fontFamily = null,
   String fontSize,
-  bool fontStyleItalic,
+  bool fontStyleItalic = false,
   FontWeight fontWeight,
+  double size = 1.0,
   bool isBlockElement,
   bool isNotRenderable,
   Iterable<BuildOp> parentOps,
   Iterable<String> styles,
-  Iterable<String> stylesPrepend,
+  Iterable<String> stylesPrepend = null,
 }) {
   meta ??= NodeMetadata();
 
@@ -131,14 +132,44 @@ class BuildOp {
 """
 
 class TestParameterElements(unittest.TestCase):
-	"""TestParameterElements"""
-	def test_normal_parameter_item(self):
-		pos = lazy_set_func.find("TextDecorationStyle decorationStyle")
-		parser = NormalParameterItemParser()
-		elem = parser.parse(lazy_set_func, pos-2)
-		self.assertEqual(elem.content(), "TextDecorationStyle decorationStyle")
-		self.assertEqual(elem.param_type.content(), "TextDecorationStyle")
-		self.assertEqual(elem.param_name.content(), "decorationStyle")
+  """TestParameterElements"""
+  def test_normal_parameter_item(self):
+    parser = NormalParameterItemParser()
+
+    pos = lazy_set_func.find("TextDecorationStyle decorationStyle")
+    elem = parser.parse(lazy_set_func, pos-2)
+    self.assertEqual(elem.content(), "TextDecorationStyle decorationStyle")
+    self.assertEqual(elem.typename.content(), "TextDecorationStyle")
+    self.assertEqual(elem.name.content(), "decorationStyle")
+    self.assertEqual(elem.default_value, None)
+
+    pos = lazy_set_func.find("String fontFamily")
+    elem = parser.parse(lazy_set_func, pos-2)
+    self.assertEqual(elem.content(), "String fontFamily = null")
+    self.assertEqual(elem.typename.content(), "String")
+    self.assertEqual(elem.name.content(), "fontFamily")
+    self.assertEqual(elem.default_value.content(), "null")
+
+    pos = lazy_set_func.find("bool fontStyleItalic")
+    elem = parser.parse(lazy_set_func, pos-2)
+    self.assertEqual(elem.content(), "bool fontStyleItalic = false")
+    self.assertEqual(elem.typename.content(), "bool")
+    self.assertEqual(elem.name.content(), "fontStyleItalic")
+    self.assertEqual(elem.default_value.content(), "false")
+
+    pos = lazy_set_func.find("double size")
+    elem = parser.parse(lazy_set_func, pos-2)
+    self.assertEqual(elem.content(), "double size = 1.0")
+    self.assertEqual(elem.typename.content(), "double")
+    self.assertEqual(elem.name.content(), "size")
+    self.assertEqual(elem.default_value.content(), "1.0")
+
+    pos = lazy_set_func.find("Iterable<String> stylesPrepend")
+    elem = parser.parse(lazy_set_func, pos-2)
+    self.assertEqual(elem.content(), "Iterable<String> stylesPrepend = null")
+    self.assertEqual(elem.typename.content(), "Iterable<String>")
+    self.assertEqual(elem.name.content(), "stylesPrepend")
+    self.assertEqual(elem.default_value.content(), "null")
 
 if __name__ == '__main__':
-	unittest.main()
+  unittest.main()

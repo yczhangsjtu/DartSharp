@@ -23,6 +23,19 @@ class BasicParser:
 
 		return BasicElement(text, m.start(1) + pos, m.end(1) + pos, (pos, m.end() + pos))
 
+class EmptyParser(object):
+	"""EmptyParser always matches successfully (except at invalid position)"""
+	def __init__(self):
+		super(EmptyParser, self).__init__()
+
+	def parse(self, text, pos):
+
+		if pos > len(text):
+			return None
+
+		return BasicElement(text, pos, pos, (pos, pos))
+
+
 class _WordParser(object):
 	def __init__(self):
 		super(_WordParser, self).__init__()
@@ -141,6 +154,24 @@ class OrParser(object):
 				return elem
 
 		return None
+
+class OptionalParser(object):
+	"""Optional parser wraps a given parser so that it doesn't
+	fail even if a match isn't found.
+	"""
+	def __init__(self, parser):
+		super(OptionalParser, self).__init__()
+		self.parser = parser
+
+	def parse(self, text, pos):
+		if pos > len(text):
+			return None
+
+		elem = self.parser.parse(text, pos)
+		if elem is None:
+			return BasicElement(text, pos, pos, (pos, pos))
+
+		return elem
 
 class _StringParser(object):
 	def __init__(self):

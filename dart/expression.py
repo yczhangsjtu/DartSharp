@@ -1,5 +1,6 @@
 from eregex.element import BasicElement
-from eregex.parser import StringParser, BoolParser, NumberParser, WordParser
+from eregex.parser import StringParser, BoolParser,\
+	NumberParser, WordParser, OrParser
 
 
 class SimpleExpressionElement(BasicElement):

@@ -3,7 +3,8 @@ from eregex.element import BasicElement, WordElement
 from eregex.parser import BasicParser, WordParser,\
 	PlainParser, SpacePlainParser, SpaceParser,\
 	JoinParser, OrParser, StringParser, NumberParser,\
-	BoolParser, ListParser, TypeNameParser
+	BoolParser, ListParser, TypeNameParser, EmptyParser,\
+	OptionalParser
 
 text = r"""/* hello world
 This is a test string.
@@ -43,6 +44,13 @@ class TestBasicParser(unittest.TestCase):
 		parser = BasicParser(r"\s*\b(\w+)\b")
 		elem = parser.parse(text, pos + 8)
 		self.assertEqual(elem, None)
+
+	def test_empty_parser(self):
+
+		parser = EmptyParser()
+		self.assertEqual(parser.parse(text, 10).start, 10)
+		self.assertEqual(parser.parse(text, 15).start, 15)
+		self.assertEqual(parser.parse(text, 10000), None)
 
 	def test_word_parser(self):
 
@@ -160,6 +168,25 @@ class TestCompositeParser(unittest.TestCase):
 
 		elem = parser.parse(text, pos + 8)
 		self.assertEqual(elem, None)
+
+	def test_optional_parser(self):
+		parser = OptionalParser(SpacePlainParser("Hello"))
+
+		pos = text.find("printf")
+
+		elem = parser.parse(text, pos + 7)
+		self.assertEqual(elem.content(), "")
+
+		elem = parser.parse(text, pos + 8)
+		self.assertEqual(elem.content(), "Hello")
+
+		elem = parser.parse(text, pos + 9)
+		self.assertEqual(elem.content(), "")
+
+
+class TestSpecialParser(unittest.TestCase):
+	"""TestSpecialParser tests parsers for special structure,
+	like String, Number, List, etc."""
 
 	def test_string_parser(self):
 		parser = StringParser()
