@@ -18,3 +18,7 @@ class BasicElement:
 			return None
 
 		return self.text[self.start:self.end]
+
+class WordElement(BasicElement):
+	pass
+
