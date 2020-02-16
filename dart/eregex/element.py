@@ -40,6 +40,14 @@ class WordElement(BasicElement):
 class StringElement(BasicElement):
 	pass
 
+class NumberElement(BasicElement):
+	"""NumberElement"""
+	def __init__(self, text, start, end, int_part, frac_part=None, span=None):
+		super(NumberElement, self).__init__(text, start, end, span)
+		self.int_part = int_part
+		self.frac_part = frac_part
+
+
 class JoinElement(BasicElement):
 	"""JoinElement"""
 	def __init__(self, text, elements, span=None):

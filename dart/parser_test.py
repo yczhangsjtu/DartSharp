@@ -1,4 +1,5 @@
 import unittest
+from parameter import *
 
 lazy_set_func="""
 NodeMetadata lazySet(
@@ -131,9 +132,9 @@ class BuildOp {
 
 class TestParameterElements(unittest.TestCase):
 	"""TestParameterElements"""
-	def test_parameter_item(self):
+	def test_normal_parameter_item(self):
 		pos = lazy_set_func.find("TextDecorationStyle decorationStyle")
-		parser = ParameterItemParser()
+		parser = NormalParameterItemParser()
 		elem = parser.parse(lazy_set_func, pos-2)
 		self.assertEqual(elem.content(), "TextDecorationStyle decorationStyle")
 		self.assertEqual(elem.param_type.content(), "TextDecorationStyle")

@@ -266,5 +266,40 @@ Map<String, List<Widget>> map = null;
 		self.assertEqual(elem.template_types[1].template_types.content(), "Widget")
 		self.assertEqual(elem.template_types[1].template_types.textspan(), "<Widget>")
 
+	def test_number_parser(self):
+		text_with_numbers = """
+int a = 1;
+double b = 1.0;
+float c = -10.0;
+long d = -1000;
+"""
+		parser = NumberParser()
+		pos = text_with_numbers.find("1")
+		elem = parser.parse(text_with_numbers, pos-1)
+		self.assertEqual(elem.start, pos)
+		self.assertEqual(elem.end, pos+1)
+		self.assertEqual(elem.span, (pos-1,pos+1))
+		self.assertEqual(elem.content(), "1")
+		self.assertEqual(elem.int_part, "1")
+		self.assertEqual(elem.frac_part, None)
+
+		pos = text_with_numbers.find("1.0")
+		elem = parser.parse(text_with_numbers, pos-1)
+		self.assertEqual(elem.content(), "1.0")
+		self.assertEqual(elem.int_part, "1")
+		self.assertEqual(elem.frac_part, "0")
+
+		pos = text_with_numbers.find("-10.0")
+		elem = parser.parse(text_with_numbers, pos-1)
+		self.assertEqual(elem.content(), "-10.0")
+		self.assertEqual(elem.int_part, "-10")
+		self.assertEqual(elem.frac_part, "0")
+
+		pos = text_with_numbers.find("-1000")
+		elem = parser.parse(text_with_numbers, pos-1)
+		self.assertEqual(elem.content(), "-1000")
+		self.assertEqual(elem.int_part, "-1000")
+		self.assertEqual(elem.frac_part, None)
+
 if __name__ == '__main__':
 	unittest.main()

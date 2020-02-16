@@ -89,6 +89,15 @@ class SpacePlainParser(object):
 
 		return BasicElement(text, curr, curr + len(self.pattern), (pos, curr + len(self.pattern)))
 
+class SpaceParser(object):
+	"""SpaceParser"""
+	def __init__(self):
+		super(SpaceParser, self).__init__()
+		self.parser = BasicParser(r"\s+")
+
+	def parse(self, text, pos):
+		return self.parser.parse(text, pos)
+
 
 class JoinParser(object):
 	"""Given a list of parsers, join them to a new parser,
@@ -179,6 +188,42 @@ class StringParser:
 	def parse(self, text, pos):
 		global _string_parser
 		return _string_parser.parse(text, pos)
+
+class _NumberParser(object):
+	def __init__(self):
+		super(_NumberParser, self).__init__()
+		self.parser = re.compile(r"\s*(-?\d+)(?:\.(\d+))?")
+
+	def parse(self, text, pos):
+
+		if pos >= len(text):
+			return None
+
+		m = self.parser.match(text[pos:])
+
+		if m is None:
+			return None
+
+		return NumberElement(
+			text,
+			m.start(1)+pos,
+			max(m.end(1)+pos, m.end(2)+pos),
+			m.group(1),
+			m.group(2),
+			(m.start(0)+pos, m.end(0)+pos)
+		)
+
+_number_parser = None
+class NumberParser:
+	"""NumberParser recognize numbers"""
+	def __init__(self):
+		global _number_parser
+		if _number_parser is None:
+			_number_parser = _NumberParser()
+
+	def parse(self, text, pos):
+		global _number_parser
+		return _number_parser.parse(text, pos)
 
 class ListParser(object):
 	"""ListParser identifies a list of items of the same type,
