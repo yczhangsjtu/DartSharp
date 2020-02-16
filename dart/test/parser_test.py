@@ -1,5 +1,5 @@
 import unittest
-from parameter import *
+from dart.parameter import NormalParameterItemElement, NormalParameterItemParser
 
 lazy_set_func="""
 NodeMetadata lazySet(

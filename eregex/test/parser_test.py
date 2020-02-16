@@ -1,6 +1,26 @@
 import unittest
-from parser import *
-from element_test import text
+from eregex.element import BasicElement, WordElement
+from eregex.parser import BasicParser, WordParser,\
+	PlainParser, SpacePlainParser, SpaceParser,\
+	JoinParser, OrParser, StringParser, NumberParser,\
+	BoolParser, ListParser, TypeNameParser
+
+text = r"""/* hello world
+This is a test string.
+Below is a C program */
+
+#include <stdio.h>
+
+int main() {
+	printf("Hello World");
+	printf("Hello 0123 0abc abc0 _1 1_ 1__");
+	printf(
+	 "Hello World!\"\\"
+	);
+	printf("\d\d\d", 12, 13, 14)
+	return 0;
+}
+"""
 
 class TestBasicParser(unittest.TestCase):
 
@@ -300,6 +320,22 @@ long d = -1000;
 		self.assertEqual(elem.content(), "-1000")
 		self.assertEqual(elem.int_part, "-1000")
 		self.assertEqual(elem.frac_part, None)
+
+	def test_bool_parser(self):
+		text_with_bool_values = """
+bool a = true;
+bool b = false;
+"""
+		parser = BoolParser()
+		pos = text_with_bool_values.find("true")
+		elem = parser.parse(text_with_bool_values, pos-1)
+		self.assertEqual(elem.content(), "true")
+		self.assertTrue(elem.value)
+
+		pos = text_with_bool_values.find("false")
+		elem = parser.parse(text_with_bool_values, pos-1)
+		self.assertEqual(elem.content(), "false")
+		self.assertFalse(elem.value)
 
 if __name__ == '__main__':
 	unittest.main()

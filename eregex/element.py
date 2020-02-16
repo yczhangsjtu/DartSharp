@@ -47,6 +47,10 @@ class NumberElement(BasicElement):
 		self.int_part = int_part
 		self.frac_part = frac_part
 
+class BoolElement(BasicElement):
+	def __init__(self, text, start, end, value, span=None):
+		super(BoolElement, self).__init__(text, start, end, span)
+		self.value = value
 
 class JoinElement(BasicElement):
 	"""JoinElement"""

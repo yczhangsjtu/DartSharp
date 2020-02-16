@@ -1,5 +1,7 @@
 import unittest
-from element import *
+from eregex.element import BasicElement, WordElement,\
+	StringElement, NumberElement, BoolElement, JoinElement,\
+	ListElement, TypeNameElement
 
 text = r"""/* hello world
 This is a test string.
@@ -43,8 +45,6 @@ class TestBasicElements(unittest.TestCase):
 		pos = text.find("main")
 		elem = WordElement(text, pos, pos + 4)
 		self.assertEqual(elem.content(), "main")
-
-
 
 if __name__ == '__main__':
 	unittest.main()

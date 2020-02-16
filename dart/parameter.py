@@ -1,5 +1,5 @@
-from eregex.element import *
-from eregex.parser import *
+from eregex.element import BasicElement
+from eregex.parser import TypeNameParser, SpaceParser, WordParser, OrParser, BasicParser
 
 class NormalParameterItemElement(BasicElement):
 	"""docstring for ParameterItemElement"""
@@ -14,7 +14,7 @@ class NormalParameterItemElement(BasicElement):
 
 class NormalParameterItemParser(object):
 	"""NormalParameterItemParser"""
-	def __init__(self, arg):
+	def __init__(self):
 		super(NormalParameterItemParser, self).__init__()
 		self.parser = JoinParser([
 			TypeNameParser(),

@@ -1,5 +1,7 @@
 import re
-from element import *
+from eregex.element import BasicElement, WordElement,\
+	StringElement, NumberElement, BoolElement,\
+	JoinElement, ListElement, TypeNameElement
 
 class BasicParser:
 
@@ -224,6 +226,20 @@ class NumberParser:
 	def parse(self, text, pos):
 		global _number_parser
 		return _number_parser.parse(text, pos)
+
+class BoolParser(object):
+	"""BoolParser recognizes a bool value"""
+	def __init__(self):
+		super(BoolParser, self).__init__()
+		self.parser = BasicParser(r"\s*(true|false)")
+
+	def parse(self, text, pos):
+		elem = self.parser.parse(text, pos)
+		if elem is None:
+			return None
+
+		return BoolElement(text, elem.start, elem.end, elem.content() == "true", elem.span)
+
 
 class ListParser(object):
 	"""ListParser identifies a list of items of the same type,
