@@ -223,6 +223,48 @@ var list = [
 		self.assertEqual(elem[2][0].content(), '"First nested item"')
 		self.assertEqual(elem[2][1].content(), '"second nested item"')
 
+	def test_type_name_parser(self):
+		typename = r"""
+int a = 10;
+Double b = 1.0f
+Iterable<Widget> iterable = null;
+Map<String, List<Widget>> map = null;
+"""
+
+		parser = TypeNameParser()
+		pos = typename.find("int")
+		elem = parser.parse(typename, pos-1)
+		self.assertEqual(elem.content(), "int")
+		self.assertEqual(elem.textspan(), "\nint")
+		self.assertEqual(elem.name.content(), "int")
+		self.assertEqual(elem.template_types, None)
+
+		pos = typename.find("Double")
+		elem = parser.parse(typename, pos-1)
+		self.assertEqual(elem.content(), "Double")
+		self.assertEqual(elem.textspan(), "\nDouble")
+		self.assertEqual(elem.name.content(), "Double")
+		self.assertEqual(elem.template_types, None)
+
+		pos = typename.find("Iterable")
+		elem = parser.parse(typename, pos-1)
+		self.assertEqual(elem.content(), "Iterable<Widget>")
+		self.assertEqual(elem.textspan(), "\nIterable<Widget>")
+		self.assertEqual(elem.name.content(), "Iterable")
+		self.assertEqual(len(elem.template_types), 1)
+		self.assertEqual(elem.template_types[0].content(), "Widget")
+
+		pos = typename.find("Map")
+		elem = parser.parse(typename, pos-1)
+		self.assertEqual(elem.content(), "Map<String, List<Widget>>")
+		self.assertEqual(elem.textspan(), "\nMap<String, List<Widget>>")
+		self.assertEqual(elem.name.content(), "Map")
+		self.assertEqual(len(elem.template_types), 2)
+		self.assertEqual(elem.template_types[0].content(), "String")
+		self.assertEqual(elem.template_types[1].content(), "List<Widget>")
+		self.assertEqual(elem.template_types[1].name.content(), "List")
+		self.assertEqual(elem.template_types[1].template_types.content(), "Widget")
+		self.assertEqual(elem.template_types[1].template_types.textspan(), "<Widget>")
 
 if __name__ == '__main__':
 	unittest.main()

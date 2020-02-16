@@ -68,3 +68,13 @@ class ListElement(JoinElement):
 	def __init__(self, text, elements, span=None, has_trailing_seperater=False):
 		super(ListElement, self).__init__(text, elements, span)
 		self.has_trailing_seperater = has_trailing_seperater
+
+class TypeNameElement(BasicElement):
+	"""TypeNameElement"""
+	def __init__(self, text, name, template_types=None, span=None):
+		end = name.end
+		if template_types is not None:
+			end = template_types.span[1]
+		super(TypeNameElement, self).__init__(text, name.start, end, span)
+		self.name = name
+		self.template_types = template_types

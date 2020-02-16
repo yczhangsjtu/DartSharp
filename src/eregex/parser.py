@@ -31,7 +31,7 @@ class WordParser(object):
 		basic_elem = self.basic_parser.parse(text, pos)
 		if basic_elem is None:
 			return None
-		return WordElement(text, basic_elem.start, basic_elem.end)
+		return WordElement(text, basic_elem.start, basic_elem.end, basic_elem.span)
 
 class PlainParser(object):
 	"""Parse plain text at given position, get a basic element"""
@@ -209,3 +209,36 @@ class ListParser(object):
 			curr = post.span[1]
 
 		return ListElement(text, elements, (pos, curr), has_trailing)
+
+class TypeNameParser(object):
+	"""TypeNameParser recognizes type names"""
+	def __init__(self):
+		super(TypeNameParser, self).__init__()
+		self.parser = OrParser([
+			JoinParser([
+				WordParser(),
+				ListParser(
+					self,
+					SpacePlainParser(","),
+					prefix = SpacePlainParser("<"),
+					postfix = SpacePlainParser(">")
+				)
+			]),
+			WordParser()
+		])
+
+	def parse(self, text, pos):
+		elem = self.parser.parse(text, pos)
+		if elem is None:
+			return None
+
+		if type(elem) is WordElement:
+			return TypeNameElement(text, elem, span=elem.span)
+
+		if type(elem) is JoinElement:
+			if len(elem) != 2:
+				raise Exception("This element should contain two sub-elements: a word and a list")
+
+			return TypeNameElement(text, elem[0], elem[1], elem.span)
+
+		raise Exception("This element should be either WordElement or JoinElement")
