@@ -1,5 +1,6 @@
 import unittest
-from dart.parameter import NormalParameterItemElement, NormalParameterItemParser
+from dart.parameter import NormalParameterItemElement,\
+  NormalParameterItemParser, ThisParameterItemElement, ThisParameterItemParser
 
 lazy_set_func="""
 NodeMetadata lazySet(
@@ -105,6 +106,10 @@ class BuildOp {
     BuildOpOnChild onChild,
     BuildOpOnPieces onPieces,
     BuildOpOnWidgets onWidgets,
+    this.width,
+    this.size = 1.0,
+    this.offset = -5.0,
+    this.name = "FirstOp",
     this.priority = 10,
   })  : _defaultStyles = defaultStyles,
         this.isBlockElement = isBlockElement ?? onWidgets != null,
@@ -139,6 +144,7 @@ class TestParameterElements(unittest.TestCase):
     pos = lazy_set_func.find("TextDecorationStyle decorationStyle")
     elem = parser.parse(lazy_set_func, pos-2)
     self.assertEqual(elem.content(), "TextDecorationStyle decorationStyle")
+    self.assertEqual(elem.textspan(), "  TextDecorationStyle decorationStyle")
     self.assertEqual(elem.typename.content(), "TextDecorationStyle")
     self.assertEqual(elem.name.content(), "decorationStyle")
     self.assertEqual(elem.default_value, None)
@@ -146,6 +152,7 @@ class TestParameterElements(unittest.TestCase):
     pos = lazy_set_func.find("String fontFamily")
     elem = parser.parse(lazy_set_func, pos-2)
     self.assertEqual(elem.content(), "String fontFamily = null")
+    self.assertEqual(elem.textspan(), "  String fontFamily = null")
     self.assertEqual(elem.typename.content(), "String")
     self.assertEqual(elem.name.content(), "fontFamily")
     self.assertEqual(elem.default_value.content(), "null")
@@ -153,6 +160,7 @@ class TestParameterElements(unittest.TestCase):
     pos = lazy_set_func.find("bool fontStyleItalic")
     elem = parser.parse(lazy_set_func, pos-2)
     self.assertEqual(elem.content(), "bool fontStyleItalic = false")
+    self.assertEqual(elem.textspan(), "  bool fontStyleItalic = false")
     self.assertEqual(elem.typename.content(), "bool")
     self.assertEqual(elem.name.content(), "fontStyleItalic")
     self.assertEqual(elem.default_value.content(), "false")
@@ -160,6 +168,7 @@ class TestParameterElements(unittest.TestCase):
     pos = lazy_set_func.find("double size")
     elem = parser.parse(lazy_set_func, pos-2)
     self.assertEqual(elem.content(), "double size = 1.0")
+    self.assertEqual(elem.textspan(), "  double size = 1.0")
     self.assertEqual(elem.typename.content(), "double")
     self.assertEqual(elem.name.content(), "size")
     self.assertEqual(elem.default_value.content(), "1.0")
@@ -167,9 +176,49 @@ class TestParameterElements(unittest.TestCase):
     pos = lazy_set_func.find("Iterable<String> stylesPrepend")
     elem = parser.parse(lazy_set_func, pos-2)
     self.assertEqual(elem.content(), "Iterable<String> stylesPrepend = null")
+    self.assertEqual(elem.textspan(), "  Iterable<String> stylesPrepend = null")
     self.assertEqual(elem.typename.content(), "Iterable<String>")
     self.assertEqual(elem.name.content(), "stylesPrepend")
     self.assertEqual(elem.default_value.content(), "null")
+
+  def test_this_parameter_item(self):
+    parser = ThisParameterItemParser()
+
+    pos = build_op_class.find("this.width")
+    elem = parser.parse(build_op_class, pos-2)
+    self.assertEqual(elem.content(), "this.width")
+    self.assertEqual(elem.textspan(), "  this.width")
+    self.assertEqual(elem.name.content(), "width")
+    self.assertEqual(elem.default_value, None)
+
+    pos = build_op_class.find("this.size = 1.0")
+    elem = parser.parse(build_op_class, pos-2)
+    self.assertEqual(elem.content(), "this.size = 1.0")
+    self.assertEqual(elem.textspan(), "  this.size = 1.0")
+    self.assertEqual(elem.name.content(), "size")
+    self.assertEqual(elem.default_value.content(), "1.0")
+
+    pos = build_op_class.find("this.offset = -5.0")
+    elem = parser.parse(build_op_class, pos-2)
+    self.assertEqual(elem.content(), "this.offset = -5.0")
+    self.assertEqual(elem.textspan(), "  this.offset = -5.0")
+    self.assertEqual(elem.name.content(), "offset")
+    self.assertEqual(elem.default_value.content(), "-5.0")
+
+    pos = build_op_class.find('this.name = "FirstOp"')
+    elem = parser.parse(build_op_class, pos-2)
+    self.assertEqual(elem.content(), 'this.name = "FirstOp"')
+    self.assertEqual(elem.textspan(), '  this.name = "FirstOp"')
+    self.assertEqual(elem.name.content(), "name")
+    self.assertEqual(elem.default_value.content(), '"FirstOp"')
+
+    pos = build_op_class.find("this.priority = 10")
+    elem = parser.parse(build_op_class, pos-2)
+    self.assertEqual(elem.content(), "this.priority = 10")
+    self.assertEqual(elem.textspan(), "  this.priority = 10")
+    self.assertEqual(elem.name.content(), "priority")
+    self.assertEqual(elem.default_value.content(), "10")
+
 
 if __name__ == '__main__':
   unittest.main()
