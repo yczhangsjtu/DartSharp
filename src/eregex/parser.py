@@ -72,7 +72,7 @@ class JoinParser(object):
 			elements.append(elem)
 			curr = elem.span[1]
 
-		return elements
+		return JoinElement(text, elements, (pos, curr))
 
 class OrParser(object):
 	"""OrParser, given a list of parsers, try to parse the text
@@ -125,8 +125,43 @@ class StringParser(object):
 				slash_open = True
 
 			if text[curr] == mark:
-				return BasicElement(text, start, curr+1, (pos, curr+1))
+				return StringElement(text, start, curr+1, (pos, curr+1))
 
 			curr += 1
 
 		return None
+
+class ListParser(object):
+	"""ListParser identifies a list of items of the same type,
+	which are separated by items of the same type"""
+	def __init__(self, item_parser, seperater_parser, allow_trailing_seperater=True):
+		super(ListParser, self).__init__()
+		self.item_parser = item_parser
+		self.seperater_parser = seperater_parser
+		self.allow_trailing_seperater = allow_trailing_seperater
+
+	def parse(self, text, pos):
+		curr = pos
+		elements = []
+		has_trailing = False
+		while True:
+			elem = self.item_parser.parse(text, curr)
+			if elem is None:
+				if self.allow_trailing_seperater:
+					has_trailing = True
+					break
+				return None
+
+			elements.append(elem)
+			curr = elem.span[1]
+
+			elem = self.seperater_parser.parse(text, curr)
+			if elem is None:
+				break
+
+			curr = elem.span[1]
+
+		if len(elements) == 0:
+			return None
+
+		return ListElement(text, elements, (pos, curr), has_trailing)

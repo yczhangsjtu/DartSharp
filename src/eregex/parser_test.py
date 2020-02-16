@@ -149,6 +149,16 @@ class TestCompositeParser(unittest.TestCase):
 		self.assertEqual(elem.content(), '"Hello World!\\"\\\\"')
 		self.assertEqual(elem.textspan(), '\n\t "Hello World!\\"\\\\"')
 
+	def test_list_parser(self):
+		parser = ListParser(BasicParser(r"\s*(\d+)"), BasicParser(r"\s*,"))
+
+		pos = text.find("printf(\"\\d")
+		elem = parser.parse(text, pos + 17)
+		self.assertEqual(len(elem), 3)
+		self.assertEqual(elem.content(), "12, 13, 14")
+		self.assertEqual(elem[0].content(), "12")
+		self.assertEqual(elem[1].content(), "13")
+		self.assertEqual(elem[2].content(), "14")
 
 if __name__ == '__main__':
 	unittest.main()

@@ -13,6 +13,7 @@ int main() {
 	printf(
 	 "Hello World!\"\\"
 	);
+	printf("\d\d\d", 12, 13, 14)
 	return 0;
 }
 """
