@@ -150,6 +150,12 @@ class TestCompositeParser(unittest.TestCase):
 		self.assertEqual(elem.textspan(), '\n\t "Hello World!\\"\\\\"')
 
 	def test_list_parser(self):
+		lst = r"""
+var list = [
+	"First item",
+	"Second item",
+]
+"""
 		parser = ListParser(BasicParser(r"\s*(\d+)"), BasicParser(r"\s*,"))
 
 		pos = text.find("printf(\"\\d")
@@ -159,6 +165,56 @@ class TestCompositeParser(unittest.TestCase):
 		self.assertEqual(elem[0].content(), "12")
 		self.assertEqual(elem[1].content(), "13")
 		self.assertEqual(elem[2].content(), "14")
+
+		pos = lst.find("[")
+		parser = ListParser(
+			StringParser(),
+			BasicParser(r"\s*,"),
+			prefix = BasicParser(r"\s*\["),
+			postfix = BasicParser(r"\s*\]"),
+		)
+		elem = parser.parse(lst, pos - 1)
+		self.assertEqual(len(elem), 2)
+		self.assertEqual(elem.content(), '"First item",\n\t"Second item"')
+		self.assertEqual(elem[0].content(), '"First item"')
+		self.assertEqual(elem[1].content(), '"Second item"')
+
+
+	def test_nested_list(self):
+		nested_list = r"""
+var list = [
+	"First item",
+	"Second item",
+	[
+		"First nested item",
+		"second nested item"
+	]
+]
+"""
+
+		parser = ListParser(
+			OrParser([
+				ListParser(
+					StringParser(),
+					BasicParser(r"\s*,"),
+					prefix = BasicParser(r"\s*\["),
+					postfix = BasicParser(r"\s*\]")
+				),
+				StringParser()
+			]),
+			BasicParser(r"\s*,")
+		)
+		pos = nested_list.find("[")
+
+		elem = parser.parse(nested_list, pos + 1)
+
+		self.assertEqual(len(elem), 3)
+		self.assertEqual(elem[0].content(), '"First item"')
+		self.assertEqual(elem[1].content(), '"Second item"')
+		self.assertEqual(len(elem[2]), 2)
+		self.assertEqual(elem[2][0].content(), '"First nested item"')
+		self.assertEqual(elem[2][1].content(), '"second nested item"')
+
 
 if __name__ == '__main__':
 	unittest.main()

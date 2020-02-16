@@ -134,16 +134,29 @@ class StringParser(object):
 class ListParser(object):
 	"""ListParser identifies a list of items of the same type,
 	which are separated by items of the same type"""
-	def __init__(self, item_parser, seperater_parser, allow_trailing_seperater=True):
+	def __init__(self, item_parser,
+			seperater_parser,
+			allow_trailing_seperater=True,
+			prefix=None,
+			postfix=None):
 		super(ListParser, self).__init__()
 		self.item_parser = item_parser
 		self.seperater_parser = seperater_parser
 		self.allow_trailing_seperater = allow_trailing_seperater
+		self.prefix = prefix
+		self.postfix = postfix
 
 	def parse(self, text, pos):
 		curr = pos
 		elements = []
 		has_trailing = False
+
+		if self.prefix is not None:
+			pre = self.prefix.parse(text, curr)
+			if pre is None:
+				return None
+			curr = pre.span[1]
+
 		while True:
 			elem = self.item_parser.parse(text, curr)
 			if elem is None:
@@ -161,7 +174,13 @@ class ListParser(object):
 
 			curr = elem.span[1]
 
-		if len(elements) == 0:
+		if len(elements) == 0 and (self.prefix is None or self.postfix is None):
 			return None
+
+		if self.postfix is not None:
+			post = self.postfix.parse(text, curr)
+			if post is None:
+				return None
+			curr = post.span[1]
 
 		return ListElement(text, elements, (pos, curr), has_trailing)
