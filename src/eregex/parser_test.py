@@ -85,6 +85,14 @@ class TestBasicParser(unittest.TestCase):
 		elem = parser.parse(text, pos - 1)
 		self.assertEqual(elem, None)
 
+	def test_space_plain_parser(self):
+
+		pos = text.find("int main() {")
+		parser = SpacePlainParser("int main() {")
+		elem = parser.parse(text, pos - 1)
+		self.assertEqual(elem.content(), "int main() {")
+		self.assertEqual(elem.textspan(), "\nint main() {")
+
 class TestCompositeParser(unittest.TestCase):
 	"""TestCompositeParser tests composite parsers,
 	like JoinParser, OrParser, etc."""
@@ -169,9 +177,9 @@ var list = [
 		pos = lst.find("[")
 		parser = ListParser(
 			StringParser(),
-			BasicParser(r"\s*,"),
-			prefix = BasicParser(r"\s*\["),
-			postfix = BasicParser(r"\s*\]"),
+			SpacePlainParser(","),
+			prefix = SpacePlainParser("["),
+			postfix = SpacePlainParser("]"),
 		)
 		elem = parser.parse(lst, pos - 1)
 		self.assertEqual(len(elem), 2)

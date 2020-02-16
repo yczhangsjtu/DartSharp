@@ -51,6 +51,31 @@ class PlainParser(object):
 
 		return BasicElement(text, pos, pos + len(self.pattern))
 
+class SpacePlainParser(object):
+	"""Parse plain text after zero or more spaces"""
+	def __init__(self, pattern):
+		super(SpacePlainParser, self).__init__()
+		self.pattern = pattern
+
+	def parse(self, text, pos):
+		if pos >= len(text):
+			return None
+
+		if self.pattern is None:
+			return None
+
+		curr = pos
+		while curr < len(text) and text[curr] in " \n\t\r":
+			curr += 1
+
+		if len(self.pattern) + curr > len(text):
+			return None
+
+		if text[curr:curr+len(self.pattern)] != self.pattern:
+			return None
+
+		return BasicElement(text, curr, curr + len(self.pattern), (pos, curr + len(self.pattern)))
+
 
 class JoinParser(object):
 	"""Given a list of parsers, join them to a new parser,
