@@ -5,7 +5,7 @@ from dart.function import NormalParameterItemElement,\
   SingleParameterListParser, ParameterListParser,\
   ConstructorParameterItemParser, ConstructorSingleParameterListParser,\
   ConstructorParameterListParser, FunctionalParameterItemElement,\
-  ParameterItemElement
+  ParameterItemElement, ConstructorHeaderElement, ConstructorHeaderParser
 from data import lazy_set_func, build_op_class, node_meta_data_class
 
 class TestParameterElements(unittest.TestCase):
@@ -307,6 +307,18 @@ class TestFunctionHeader(unittest.TestCase):
 		self.assertEqual(elem.parameter_list.named[1].name.content(), "b")
 		self.assertEqual(elem.parameter_list.named[1].typename.content(), "int")
 		self.assertEqual(elem.parameter_list.named[1].default_value, None)
+
+	def test_constructor_header(self):
+		parser = ConstructorHeaderParser("BuildOp")
+		pos = build_op_class.find("BuildOp({")
+		elem = parser.parse(build_op_class, pos)
+		self.assertEqual(elem.name.content(), "BuildOp")
+		self.assertEqual(elem.parameter_list.positioned, None)
+		self.assertEqual(elem.parameter_list.named[0].content(), "BuildOpDefaultStyles defaultStyles")
+		self.assertEqual(elem.parameter_list.named[-1].content(), "this.priority = 10")
+		self.assertEqual(elem.content()[-4:0], "  })")
+
+
 
 if __name__ == '__main__':
 	unittest.main()
