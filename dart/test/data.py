@@ -206,3 +206,21 @@ class NodeMetadata {
   }
 }
 """
+
+classes="""
+abstract class MyClass extends BaseClass {
+}
+
+class MySecondClass<T> extends BaseClass<T> {
+}
+
+class MyThirdClass<T,K> implements MyClass, MySecondClass<T>
+                        with BaseClass {
+}
+
+abstract class MyFourthClass<T,K>
+  extends MyThirdClass<T,K>
+  implements MyClass, MySecondClass<T>
+  with BaseClass {
+}
+"""

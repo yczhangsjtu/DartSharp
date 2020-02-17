@@ -344,3 +344,4 @@ class ConstructorHeaderParser(object):
 
 		name, parameter_list = elem[0], elem[2]
 		return FunctionHeaderElement(text, elem.end, name, parameter_list, elem.span)
+
