@@ -62,9 +62,10 @@ class BlockLocator(object):
 
 class LineLocator(object):
 	"""LineLocator"""
-	def __init__(self, parser):
+	def __init__(self, parser, indentation=None):
 		super(LineLocator, self).__init__()
 		self.parser = parser
+		self.indentation = indentation
 
 	def locate(self, text, start=0, end=-1):
 		if end < 0:
@@ -73,7 +74,8 @@ class LineLocator(object):
 		curr, elements = start, []
 		while curr < end:
 			elem = self.parser.parse(text, curr)
-			if elem is None:
+			if elem is None or (self.indentation != None and\
+					indentation_at(text, curr) != self.indentation):
 				curr = next_line_start(text, curr)
 				continue
 
