@@ -105,7 +105,8 @@ class ConstructorParameterItemParser(object):
 		super(ConstructorParameterItemParser, self).__init__()
 		self.parser = OrParser([
 			NormalParameterItemParser(),
-			ThisParameterItemParser()
+			ThisParameterItemParser(),
+			FunctionHeaderParser(),
 		])
 
 	def parse(self, text, pos):
@@ -119,7 +120,8 @@ class ParameterItemParser(object):
 	def __init__(self):
 		super(ParameterItemParser, self).__init__()
 		self.parser = OrParser([
-			NormalParameterItemParser()
+			NormalParameterItemParser(),
+			FunctionHeaderParser(),
 		])
 
 	def parse(self, text, pos):
@@ -136,12 +138,14 @@ class SingleParameterListElement(ListElement):
 
 class SingleParameterListParser(object):
 	"""SingleParameterListParser"""
-	def __init__(self, item_parser=ParameterItemParser(), allow_trailing_comma=True, curly_brace=False):
+	def __init__(self, item_parser=None, allow_trailing_comma=True, curly_brace=False):
 		super(SingleParameterListParser, self).__init__()
 		if curly_brace:
 			prefix, postfix = SpacePlainParser("{"), SpacePlainParser("}")
 		else:
 			prefix, postfix = None, None
+		if item_parser is None:
+			item_parser = ParameterItemParser()
 
 		self.parser = ListParser(
 			item_parser,
@@ -241,11 +245,11 @@ class FunctionHeaderElement(BasicElement):
 		self.name = name
 		self.parameter_list = parameter_list
 
-
-class FunctionHeaderParser(object):
-	"""FunctionHeaderParser"""
+_function_header_parser = None
+class _FunctionHeaderParser(object):
+	"""_FunctionHeaderParser"""
 	def __init__(self):
-		super(FunctionHeaderParser, self).__init__()
+		super(_FunctionHeaderParser, self).__init__()
 		self.parser = JoinParser([
 			TypeNameParser(),
 			SpaceParser(),
@@ -262,3 +266,14 @@ class FunctionHeaderParser(object):
 
 		typename, name, parameter_list = elem[0], elem[2], elem[4]
 		return FunctionHeaderElement(text, elem.end, typename, name, parameter_list, elem.span)
+
+class FunctionHeaderParser(object):
+	"""FunctionHeaderParser"""
+	def __init__(self):
+		super(FunctionHeaderParser, self).__init__()
+
+	def parse(self, text, pos):
+		global _function_header_parser
+		if _function_header_parser is None:
+			_function_header_parser = _FunctionHeaderParser()
+		return _function_header_parser.parse(text, pos)
