@@ -1,5 +1,5 @@
 import unittest
-from dart.expression import *
+from dart.expression import SimpleExpressionParser
 
 class TestSimpleExpression(unittest.TestCase):
 	"""TestSimpleExpression"""
