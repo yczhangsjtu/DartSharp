@@ -8,10 +8,11 @@ from dart.expression import SimpleExpressionParser
 class NormalParameterItemElement(BasicElement):
 	"""NormalParameterItemElement"""
 	def __init__(self, text, typename, name, default_value=None):
-		end = name.end
+		end, spanend = name.end, name.span[1]
 		if default_value is not None:
-			end = default_value.span[1]
-		super(NormalParameterItemElement, self).__init__(text, typename.start, end, (typename.span[0], end))
+			end, spanend = default_value.end, default_value.span[1]
+
+		super(NormalParameterItemElement, self).__init__(text, typename.start, end, (typename.span[0], spanend))
 		self.typename = typename
 		self.name = name
 		self.default_value = default_value
@@ -87,6 +88,46 @@ class ThisParameterItemParser(object):
 			text, elem[0].start, elem[1], default_value, (pos, elem[2].span[1])
 		)
 
+class FunctionalParameterItemElement(BasicElement):
+	"""FunctionalParameterItemElement"""
+	def __init__(self, text, function_header, default_value=None):
+		end, spanend = function_header.end, function_header.span[1]
+		if default_value is not None:
+			end, spanend = default_value.end, default_value.span[1]
+		super(FunctionalParameterItemElement, self).__init__(text, function_header.start, end, (function_header.span[0], spanend))
+		self.function_header = function_header
+		self.name = function_header.name
+		self.typename = function_header.typename
+		self.default_value = default_value
+
+class FunctionalParameterItemParser(object):
+	"""FunctionalParameterItemParser"""
+	def __init__(self):
+		super(FunctionalParameterItemParser, self).__init__()
+		self.parser = JoinParser([
+			FunctionHeaderParser(),
+			OptionalParser(
+				JoinParser([
+					SpacePlainParser("="),
+					SimpleExpressionParser()
+				])
+			)
+		])
+
+	def parse(self, text, pos):
+		elem = self.parser.parse(text, pos)
+		if elem is None:
+			return None
+
+		if type(elem[1]) is JoinElement:
+			default_value = elem[1][1]
+		else:
+			default_value = None
+
+		return FunctionalParameterItemElement(
+			text, elem[0], default_value
+		)
+
 class ParameterItemElement(BasicElement):
 	def __init__(self, element):
 		super(ParameterItemElement, self).__init__(element.text, element.start, element.end, element.span)
@@ -104,9 +145,9 @@ class ConstructorParameterItemParser(object):
 	def __init__(self):
 		super(ConstructorParameterItemParser, self).__init__()
 		self.parser = OrParser([
+			FunctionalParameterItemParser(),
 			NormalParameterItemParser(),
 			ThisParameterItemParser(),
-			FunctionHeaderParser(),
 		])
 
 	def parse(self, text, pos):
@@ -120,8 +161,8 @@ class ParameterItemParser(object):
 	def __init__(self):
 		super(ParameterItemParser, self).__init__()
 		self.parser = OrParser([
+			FunctionalParameterItemParser(),
 			NormalParameterItemParser(),
-			FunctionHeaderParser(),
 		])
 
 	def parse(self, text, pos):

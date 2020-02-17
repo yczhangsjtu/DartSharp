@@ -198,5 +198,11 @@ class NodeMetadata {
       f(key, iterator.current);
     }
   }
+
+  void f({void g(int a) = null, int b}) {
+  }
+
+  void h(int o(), {void g(int a) = null, int b}) {
+  }
 }
 """

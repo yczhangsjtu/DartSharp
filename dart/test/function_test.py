@@ -194,6 +194,15 @@ class TestParameterElements(unittest.TestCase):
     elem = parser.parse(build_op_class, pos+1)
     self.assertEqual(elem.content(), "")
 
+  def test_parameter_list_with_function_header(self):
+  	parser = ParameterListParser()
+  	pos = node_meta_data_class.find("void styles(void f(String key, String value))")
+  	elem = parser.parse(node_meta_data_class, pos + 12)
+  	self.assertEqual(len(elem.positioned), 1)
+  	self.assertEqual(elem.named, None)
+  	self.assertEqual(elem.content(), "void f(String key, String value)")
+  	self.assertEqual(elem.positioned[0].content(), "void f(String key, String value)")
+
 if __name__ == '__main__':
   unittest.main()
 
