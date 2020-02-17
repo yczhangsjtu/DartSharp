@@ -54,7 +54,7 @@ class BoolElement(BasicElement):
 
 class JoinElement(BasicElement):
 	"""JoinElement"""
-	def __init__(self, text, elements, span=None):
+	def __init__(self, text, elements, span=None, start=None, end=None):
 		if elements is None or len(elements) == 0:
 			self.start = 0
 			self.end = 0
@@ -62,7 +62,12 @@ class JoinElement(BasicElement):
 			self.span = None
 			self.elements = None
 		else:
-			super(JoinElement, self).__init__(text, elements[0].start, elements[-1].end, span)
+			if start is None:
+				start = elements[0].start
+			if end is None:
+				end = elements[-1].end
+
+			super(JoinElement, self).__init__(text, start, end, span)
 			self.elements = elements
 
 	def __len__(self):
@@ -77,8 +82,8 @@ class JoinElement(BasicElement):
 
 class ListElement(JoinElement):
 	"""ListElement"""
-	def __init__(self, text, elements, span=None, has_trailing_seperater=False):
-		super(ListElement, self).__init__(text, elements, span)
+	def __init__(self, text, elements, span=None, has_trailing_seperater=False, start=None, end=None):
+		super(ListElement, self).__init__(text, elements, span, start, end)
 		self.has_trailing_seperater = has_trailing_seperater
 
 class TypeNameElement(BasicElement):

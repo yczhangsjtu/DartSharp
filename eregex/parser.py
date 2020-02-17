@@ -292,20 +292,21 @@ class ListParser(object):
 		elements = []
 		has_trailing = False
 
+		start = None
 		if self.prefix is not None:
 			pre = self.prefix.parse(text, curr)
 			if pre is None:
 				return None
 			curr = pre.span[1]
+			start = pre.start
 
+		last_elem, last_is_item = None, False
 		while True:
 			elem = self.item_parser.parse(text, curr)
 			if elem is None:
-				if self.allow_trailing_seperater:
-					has_trailing = True
-					break
-				return None
+				break
 
+			last_elem, last_is_item = elem, True
 			elements.append(elem)
 			curr = elem.span[1]
 
@@ -313,18 +314,30 @@ class ListParser(object):
 			if elem is None:
 				break
 
+			last_elem, last_is_item = elem, False
 			curr = elem.span[1]
 
 		if len(elements) == 0:
 			return None
 
 		if self.postfix is not None:
+			if not self.allow_trailing_seperater and not last_is_item:
+				return None
+
 			post = self.postfix.parse(text, curr)
 			if post is None:
 				return None
 			curr = post.span[1]
+			end = post.end
 
-		return ListElement(text, elements, (pos, curr), has_trailing)
+		else:
+			if not self.allow_trailing_seperater and not last_is_item:
+				last_elem, last_is_item = elements[-1], True
+
+			curr = last_elem.span[1]
+			end = last_elem.end
+
+		return ListElement(text, elements, (pos, curr), not last_is_item, start, end)
 
 class _TypeNameParser(object):
 	def __init__(self):

@@ -230,7 +230,27 @@ var list = [
 		)
 		elem = parser.parse(lst, pos - 1)
 		self.assertEqual(len(elem), 2)
+		self.assertEqual(elem.content(), '[\n\t"First item",\n\t"Second item",\n]')
+		self.assertEqual(elem[0].content(), '"First item"')
+		self.assertEqual(elem[1].content(), '"Second item"')
+
+		parser = ListParser(
+			StringParser(),
+			SpacePlainParser(","),
+			allow_trailing_seperater=False)
+		elem = parser.parse(lst, pos + 1)
+		self.assertEqual(len(elem), 2)
 		self.assertEqual(elem.content(), '"First item",\n\t"Second item"')
+		self.assertEqual(elem[0].content(), '"First item"')
+		self.assertEqual(elem[1].content(), '"Second item"')
+
+		parser = ListParser(
+			StringParser(),
+			SpacePlainParser(","),
+			allow_trailing_seperater=True)
+		elem = parser.parse(lst, pos + 1)
+		self.assertEqual(len(elem), 2)
+		self.assertEqual(elem.content(), '"First item",\n\t"Second item",')
 		self.assertEqual(elem[0].content(), '"First item"')
 		self.assertEqual(elem[1].content(), '"Second item"')
 
@@ -310,7 +330,7 @@ Map<String, List<Widget>> map = null;
 		self.assertEqual(elem.template_types[0].content(), "String")
 		self.assertEqual(elem.template_types[1].content(), "List<Widget>")
 		self.assertEqual(elem.template_types[1].name.content(), "List")
-		self.assertEqual(elem.template_types[1].template_types.content(), "Widget")
+		self.assertEqual(elem.template_types[1].template_types.content(), "<Widget>")
 		self.assertEqual(elem.template_types[1].template_types.textspan(), "<Widget>")
 
 	def test_number_parser(self):

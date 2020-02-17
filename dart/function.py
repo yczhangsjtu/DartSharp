@@ -1,4 +1,5 @@
-from parameter import ParameterItemElement, ParameterItemParser, ParameterListParser
+from parameter import ParameterItemElement, ParameterItemParser,\
+	SingleParameterListParser
 from eregex.parser import OptionalParser, SpaceParser, TypeNameParser,\
 	WordParser, SpacePlainParser
 
@@ -11,4 +12,5 @@ class FunctionHeaderElement(object):
 			SpaceParser(),
 			WordParser(),
 			SpacePlainParser("("),
+			SingleParameterListParser()
 		])

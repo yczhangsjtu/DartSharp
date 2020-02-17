@@ -1,7 +1,8 @@
 from eregex.element import BasicElement, JoinElement, ListElement
 from eregex.parser import TypeNameParser,\
 	SpaceParser, WordParser, OrParser, BasicParser,\
-	JoinParser, SpacePlainParser, OptionalParser, ListParser
+	JoinParser, SpacePlainParser, OptionalParser, ListParser,\
+	EmptyParser
 from dart.expression import SimpleExpressionParser
 
 class NormalParameterItemElement(BasicElement):
@@ -83,7 +84,7 @@ class ThisParameterItemParser(object):
 			default_value = None
 
 		return ThisParameterItemElement(
-			text, elem[0].start, elem[1], default_value, (pos, elem[2].end)
+			text, elem[0].start, elem[1], default_value, (pos, elem[2].span[1])
 		)
 
 class ParameterItemElement(BasicElement):
@@ -114,8 +115,8 @@ class ParameterItemParser(object):
 		return ParameterItemElement(elem)
 
 class SingleParameterListElement(ListElement):
-	def __init__(self, text, parameters, span=None, has_trailing_comma=False, has_curly_brace=False):
-		super(SingleParameterListElement, self).__init__(text, parameters, span, has_trailing_comma)
+	def __init__(self, text, parameters, span=None, has_trailing_comma=False, has_curly_brace=False, start=None, end=None):
+		super(SingleParameterListElement, self).__init__(text, parameters, span, has_trailing_comma, start, end)
 		self.has_trailing_comma = has_trailing_comma
 		self.has_curly_brace = has_curly_brace
 
@@ -146,5 +147,48 @@ class SingleParameterListParser(object):
 			elem.elements,
 			elem.span,
 			elem.has_trailing_seperater,
-			self.curly_brace)
+			self.curly_brace,
+			start = elem.start,
+			end = elem.end)
 
+class ParameterListElement(BasicElement):
+	"""ParameterListElement"""
+	def __init__(self, text, start, end, positioned, named, span=None):
+		if span is None:
+			span = (start, end)
+		super(ParameterListElement, self).__init__(text, start, end, span)
+		self.positioned = positioned
+		self.named = named
+
+class ParameterListParser(object):
+	"""ParameterListParser"""
+	def __init__(self):
+		super(ParameterListParser, self).__init__()
+		self.parser = OrParser([
+			JoinParser([
+				SingleParameterListParser(allow_trailing_comma=False),
+				SpacePlainParser(","),
+				SingleParameterListParser(curly_brace=True),
+			]),
+			SingleParameterListParser(),
+			SingleParameterListParser(curly_brace=True),
+			EmptyParser()
+		])
+
+	def parse(self, text, pos):
+		elem = self.parser.parse(text, pos)
+		if elem is None:
+			return None
+
+		start, end, span, positioned, named = elem.start, elem.end, elem.span, None, None
+
+		if type(elem) is JoinElement:
+			start, end, positioned, named = elem[0].start, elem[2].end, elem[0], elem[2]
+
+		elif type(elem) is SingleParameterListElement:
+			if elem.has_curly_brace:
+				named = elem
+			else:
+				positioned = elem
+
+		return ParameterListElement(text, start, end, positioned, named, span)

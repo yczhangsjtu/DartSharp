@@ -2,7 +2,7 @@ import unittest
 from dart.parameter import NormalParameterItemElement,\
   NormalParameterItemParser, ThisParameterItemElement,\
   ThisParameterItemParser, ParameterItemParser,\
-  SingleParameterListParser
+  SingleParameterListParser, ParameterListParser
 
 lazy_set_func="""
 NodeMetadata lazySet(
@@ -324,13 +324,37 @@ class TestParameterElements(unittest.TestCase):
 
   def test_single_parameter_list(self):
     parser = SingleParameterListParser(allow_trailing_comma=True, curly_brace=True)
-
     pos = lazy_set_func.find("{")
     elem = parser.parse(lazy_set_func, pos-1)
     self.assertEqual(elem[0].content(), "BuildOp buildOp")
     self.assertEqual(elem[-1].content(), "Iterable<String> stylesPrepend = null")
     self.assertTrue(elem.has_trailing_comma)
+    self.assertEqual(elem.content(), lazy_set_func[pos:lazy_set_func.find("}")+1])
     self.assertEqual(elem.textspan(), lazy_set_func[pos-1:lazy_set_func.find("}")+1])
+
+    parser = SingleParameterListParser(allow_trailing_comma=True, curly_brace=False)
+    pos = lazy_set_func.find("{")
+    elem = parser.parse(lazy_set_func, pos+1)
+    self.assertEqual(elem[0].content(), "BuildOp buildOp")
+    self.assertEqual(elem[-1].content(), "Iterable<String> stylesPrepend = null")
+    self.assertTrue(elem.has_trailing_comma)
+    self.assertEqual(elem.content(), lazy_set_func[pos+4:lazy_set_func.find("}")-1])
+    self.assertEqual(elem.textspan(), lazy_set_func[pos+1:lazy_set_func.find("}")-1])
+
+  def test_parameter_list(self):
+    parser = ParameterListParser()
+
+    pos = lazy_set_func.find("(")
+    elem = parser.parse(lazy_set_func, pos+1)
+    self.assertEqual(len(elem.positioned), 1)
+    self.assertFalse(elem.positioned.has_trailing_comma)
+    self.assertEqual(elem.positioned.content(), "NodeMetadata meta")
+    self.assertEqual(elem.positioned.textspan(), "\n  NodeMetadata meta")
+    self.assertEqual(elem.named[0].content(), "BuildOp buildOp")
+    self.assertEqual(elem.named[-1].content(), "Iterable<String> stylesPrepend = null")
+    self.assertTrue(elem.named.has_trailing_comma)
+    self.assertEqual(elem.named.content(), lazy_set_func[lazy_set_func.find("{"):lazy_set_func.find("}")+1])
+    self.assertEqual(elem.named.textspan(), lazy_set_func[lazy_set_func.find("{")-1:lazy_set_func.find("}")+1])
 
 if __name__ == '__main__':
   unittest.main()
