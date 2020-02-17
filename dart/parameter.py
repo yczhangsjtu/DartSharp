@@ -99,13 +99,27 @@ class ParameterItemElement(BasicElement):
 		self.name = element.name
 		self.default_value = element.default_value
 
-class ParameterItemParser(object):
-	"""ParameterItemPraser"""
+class ConstructorParameterItemParser(object):
+	"""ConstructorParameterItemParser"""
 	def __init__(self):
-		super(ParameterItemParser, self).__init__()
+		super(ConstructorParameterItemParser, self).__init__()
 		self.parser = OrParser([
 			NormalParameterItemParser(),
 			ThisParameterItemParser()
+		])
+
+	def parse(self, text, pos):
+		elem = self.parser.parse(text, pos)
+		if elem is None:
+			return None
+		return ParameterItemElement(elem)
+
+class ParameterItemParser(object):
+	"""ParameterItemParser"""
+	def __init__(self):
+		super(ParameterItemParser, self).__init__()
+		self.parser = OrParser([
+			NormalParameterItemParser()
 		])
 
 	def parse(self, text, pos):
@@ -122,7 +136,7 @@ class SingleParameterListElement(ListElement):
 
 class SingleParameterListParser(object):
 	"""SingleParameterListParser"""
-	def __init__(self, allow_trailing_comma=True, curly_brace=False):
+	def __init__(self, item_parser=ParameterItemParser(), allow_trailing_comma=True, curly_brace=False):
 		super(SingleParameterListParser, self).__init__()
 		if curly_brace:
 			prefix, postfix = SpacePlainParser("{"), SpacePlainParser("}")
@@ -130,7 +144,7 @@ class SingleParameterListParser(object):
 			prefix, postfix = None, None
 
 		self.parser = ListParser(
-			ParameterItemParser(),
+			item_parser,
 			SpacePlainParser(","),
 			allow_trailing_seperater = allow_trailing_comma,
 			prefix = prefix,
@@ -151,6 +165,13 @@ class SingleParameterListParser(object):
 			start = elem.start,
 			end = elem.end)
 
+class ConstructorSingleParameterListParser(SingleParameterListParser):
+	"""ConstructorSingleParameterListParser"""
+	def __init__(self, allow_trailing_comma=True, curly_brace=False):
+		super(ConstructorSingleParameterListParser, self).__init__(
+			ConstructorParameterItemParser(),
+			allow_trailing_comma, curly_brace)
+
 class ParameterListElement(BasicElement):
 	"""ParameterListElement"""
 	def __init__(self, text, start, end, positioned, named, span=None):
@@ -162,18 +183,31 @@ class ParameterListElement(BasicElement):
 
 class ParameterListParser(object):
 	"""ParameterListParser"""
-	def __init__(self):
+	def __init__(self, is_constructor=False):
 		super(ParameterListParser, self).__init__()
-		self.parser = OrParser([
-			JoinParser([
-				SingleParameterListParser(allow_trailing_comma=False),
-				SpacePlainParser(","),
+
+		if is_constructor:
+			self.parser = OrParser([
+				JoinParser([
+					ConstructorSingleParameterListParser(allow_trailing_comma=False),
+					SpacePlainParser(","),
+					ConstructorSingleParameterListParser(curly_brace=True),
+				]),
+				ConstructorSingleParameterListParser(),
+				ConstructorSingleParameterListParser(curly_brace=True),
+				EmptyParser()
+			])
+		else:
+			self.parser = OrParser([
+				JoinParser([
+					SingleParameterListParser(allow_trailing_comma=False),
+					SpacePlainParser(","),
+					SingleParameterListParser(curly_brace=True),
+				]),
+				SingleParameterListParser(),
 				SingleParameterListParser(curly_brace=True),
-			]),
-			SingleParameterListParser(),
-			SingleParameterListParser(curly_brace=True),
-			EmptyParser()
-		])
+				EmptyParser()
+			])
 
 	def parse(self, text, pos):
 		elem = self.parser.parse(text, pos)
@@ -192,3 +226,8 @@ class ParameterListParser(object):
 				positioned = elem
 
 		return ParameterListElement(text, start, end, positioned, named, span)
+
+class ConstructorParameterListParser(ParameterListParser):
+	"""ConstructorParameterListParser"""
+	def __init__(self):
+		super(ConstructorParameterListParser, self).__init__(is_constructor=True)

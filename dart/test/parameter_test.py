@@ -2,7 +2,9 @@ import unittest
 from dart.parameter import NormalParameterItemElement,\
   NormalParameterItemParser, ThisParameterItemElement,\
   ThisParameterItemParser, ParameterItemParser,\
-  SingleParameterListParser, ParameterListParser
+  SingleParameterListParser, ParameterListParser,\
+  ConstructorParameterItemParser, ConstructorSingleParameterListParser,\
+  ConstructorParameterListParser
 
 lazy_set_func="""
 NodeMetadata lazySet(
@@ -308,6 +310,8 @@ class TestParameterElements(unittest.TestCase):
     self.assertEqual(elem.name.content(), "stylesPrepend")
     self.assertEqual(elem.default_value.content(), "null")
 
+    parser = ConstructorParameterItemParser()
+
     pos = build_op_class.find('this.name = "FirstOp"')
     elem = parser.parse(build_op_class, pos-2)
     self.assertEqual(elem.content(), 'this.name = "FirstOp"')
@@ -341,6 +345,25 @@ class TestParameterElements(unittest.TestCase):
     self.assertEqual(elem.content(), lazy_set_func[pos+4:lazy_set_func.find("}")-1])
     self.assertEqual(elem.textspan(), lazy_set_func[pos+1:lazy_set_func.find("}")-1])
 
+  def test_constructor_single_parameter_list(self):
+    parser = ConstructorSingleParameterListParser(allow_trailing_comma=True, curly_brace=True)
+    pos = build_op_class.find("({")
+    elem = parser.parse(build_op_class, pos+1)
+    self.assertEqual(elem[0].content(), "BuildOpDefaultStyles defaultStyles")
+    self.assertEqual(elem[-1].content(), "this.priority = 10")
+    self.assertTrue(elem.has_trailing_comma)
+    self.assertEqual(elem.content(), build_op_class[pos+1:build_op_class.find("}")+1])
+    self.assertEqual(elem.textspan(), build_op_class[pos+1:build_op_class.find("}")+1])
+
+    parser = ConstructorSingleParameterListParser(allow_trailing_comma=True, curly_brace=False)
+    pos = build_op_class.find("({")
+    elem = parser.parse(build_op_class, pos+2)
+    self.assertEqual(elem[0].content(), "BuildOpDefaultStyles defaultStyles")
+    self.assertEqual(elem[-1].content(), "this.priority = 10")
+    self.assertTrue(elem.has_trailing_comma)
+    self.assertEqual(elem.content(), build_op_class[pos+7:build_op_class.find("}")-3])
+    self.assertEqual(elem.textspan(), build_op_class[pos+2:build_op_class.find("}")-3])
+
   def test_parameter_list(self):
     parser = ParameterListParser()
 
@@ -355,6 +378,22 @@ class TestParameterElements(unittest.TestCase):
     self.assertTrue(elem.named.has_trailing_comma)
     self.assertEqual(elem.named.content(), lazy_set_func[lazy_set_func.find("{"):lazy_set_func.find("}")+1])
     self.assertEqual(elem.named.textspan(), lazy_set_func[lazy_set_func.find("{")-1:lazy_set_func.find("}")+1])
+
+  def test_constructor_parameter_list(self):
+    parser = ConstructorParameterListParser()
+
+    pos = build_op_class.find("({")
+    elem = parser.parse(build_op_class, pos+1)
+    self.assertEqual(elem.positioned, None)
+    self.assertEqual(elem.named[0].content(), "BuildOpDefaultStyles defaultStyles")
+    self.assertEqual(elem.named[-1].content(), "this.priority = 10")
+    self.assertTrue(elem.named.has_trailing_comma)
+    self.assertEqual(elem.named.content(), build_op_class[pos+1:build_op_class.find("}")+1])
+    self.assertEqual(elem.named.textspan(), build_op_class[pos+1:build_op_class.find("}")+1])
+
+    parser = ParameterListParser()
+    elem = parser.parse(build_op_class, pos+1)
+    self.assertEqual(elem.content(), "")
 
 if __name__ == '__main__':
   unittest.main()
