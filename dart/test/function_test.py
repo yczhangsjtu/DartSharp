@@ -4,7 +4,8 @@ from dart.function import NormalParameterItemElement,\
   ThisParameterItemParser, ParameterItemParser,\
   SingleParameterListParser, ParameterListParser,\
   ConstructorParameterItemParser, ConstructorSingleParameterListParser,\
-  ConstructorParameterListParser
+  ConstructorParameterListParser, FunctionalParameterItemElement,\
+  ParameterItemElement
 from data import lazy_set_func, build_op_class, node_meta_data_class
 
 class TestParameterElements(unittest.TestCase):
@@ -196,12 +197,46 @@ class TestParameterElements(unittest.TestCase):
 
   def test_parameter_list_with_function_header(self):
   	parser = ParameterListParser()
+
   	pos = node_meta_data_class.find("void styles(void f(String key, String value))")
   	elem = parser.parse(node_meta_data_class, pos + 12)
   	self.assertEqual(len(elem.positioned), 1)
   	self.assertEqual(elem.named, None)
   	self.assertEqual(elem.content(), "void f(String key, String value)")
   	self.assertEqual(elem.positioned[0].content(), "void f(String key, String value)")
+
+  	pos = node_meta_data_class.find("void f({void g(int a) = null, int b})")
+  	elem = parser.parse(node_meta_data_class, pos + 7)
+  	self.assertEqual(len(elem.named), 2)
+  	self.assertEqual(elem.positioned, None)
+  	self.assertEqual(elem.content(), "{void g(int a) = null, int b}")
+  	self.assertEqual(type(elem.named[0]), ParameterItemElement)
+  	self.assertEqual(elem.named[0].content(), "void g(int a) = null")
+  	self.assertEqual(elem.named[0].name.content(), "g")
+  	self.assertEqual(elem.named[0].typename.content(), "void")
+  	self.assertEqual(elem.named[0].default_value.content(), "null")
+  	self.assertEqual(elem.named[1].name.content(), "b")
+  	self.assertEqual(elem.named[1].typename.content(), "int")
+  	self.assertEqual(elem.named[1].default_value, None)
+
+  	pos = node_meta_data_class.find("void h(int o(), {void g(int a) = null, int b})")
+  	elem = parser.parse(node_meta_data_class, pos + 7)
+  	self.assertEqual(len(elem.named), 2)
+  	self.assertEqual(len(elem.positioned), 1)
+  	self.assertEqual(elem.content(), "int o(), {void g(int a) = null, int b}")
+  	self.assertEqual(elem.positioned[0].content(), "int o()")
+  	self.assertEqual(elem.positioned[0].name.content(), "o")
+  	self.assertEqual(elem.positioned[0].typename.content(), "int")
+  	self.assertEqual(elem.positioned[0].default_value, None)
+  	self.assertEqual(type(elem.named[0]), ParameterItemElement)
+  	self.assertEqual(elem.named[0].content(), "void g(int a) = null")
+  	self.assertEqual(elem.named[0].name.content(), "g")
+  	self.assertEqual(elem.named[0].typename.content(), "void")
+  	self.assertEqual(elem.named[0].default_value.content(), "null")
+  	self.assertEqual(elem.named[1].name.content(), "b")
+  	self.assertEqual(elem.named[1].typename.content(), "int")
+  	self.assertEqual(elem.named[1].default_value, None)
+
 
 if __name__ == '__main__':
   unittest.main()

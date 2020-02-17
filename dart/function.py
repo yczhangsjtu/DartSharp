@@ -133,7 +133,7 @@ class ParameterItemElement(BasicElement):
 		super(ParameterItemElement, self).__init__(element.text, element.start, element.end, element.span)
 		self.element = element
 		self.is_this = type(element) is ThisParameterItemElement
-		if type(element) is NormalParameterItemElement:
+		if type(element) is NormalParameterItemElement or type(element) is FunctionalParameterItemElement:
 			self.typename = element.typename
 		else:
 			self.typename = None
