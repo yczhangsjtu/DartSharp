@@ -318,3 +318,29 @@ class FunctionHeaderParser(object):
 		if _function_header_parser is None:
 			_function_header_parser = _FunctionHeaderParser()
 		return _function_header_parser.parse(text, pos)
+
+class ConstructorHeaderElement(BasicElement):
+	"""ConstructorHeaderElement"""
+	def __init__(self, text, end, name, parameter_list, span):
+		super(ConstructorHeaderElement, self).__init__(text, name.start, end, span)
+		self.name = name
+		self.parameter_list = parameter_list
+
+class ConstructorHeaderParser(object):
+	"""ConstructorHeaderParser"""
+	def __init__(self, class_name):
+		super(ConstructorHeaderParser, self).__init__()
+		self.parser = JoinParser([
+			SpacePlainParser(class_name),
+			SpacePlainParser("("),
+			ParameterListParser(),
+			SpacePlainParser(")"),
+		])
+
+	def parse(self, text, pos):
+		elem = self.parser.parse(text, pos)
+		if elem is None:
+			return None
+
+		name, parameter_list = elem[0], elem[2]
+		return FunctionHeaderElement(text, elem.end, name, parameter_list, elem.span)
