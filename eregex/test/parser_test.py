@@ -6,22 +6,7 @@ from eregex.parser import BasicParser, WordParser,\
 	BoolParser, ListParser, TypeNameParser, EmptyParser,\
 	OptionalParser
 
-text = r"""/* hello world
-This is a test string.
-Below is a C program */
-
-#include <stdio.h>
-
-int main() {
-	printf("Hello World");
-	printf("Hello 0123 0abc abc0 _1 1_ 1__");
-	printf(
-	 "Hello World!\"\\"
-	);
-	printf("\d\d\d", 12, 13, 14)
-	return 0;
-}
-"""
+from eregex.test.data import text
 
 class TestBasicParser(unittest.TestCase):
 
