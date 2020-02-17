@@ -1,2 +1,42 @@
 # DartSharp
-A simple and lightweight dart compiler to C# implemented with python.
+
+This is a simple and lightweight dart compiler to C# implemented with python.
+Please be noted that. It is NOT intended to work as a full-fledged compiler.
+Instead, it is just a tool assisting human being in manual translation.
+In another word, this is just a more advanced version of "find and replace".
+It only tries to handle most of the easy but tedious work in the translation, to leave only the trickiest differences between dart and C# to human being.
+
+This tool exploits heavily the similarities between dart and C#.
+It works by identifying in the code dart features that are not supported in C#, and try to replace it with C# implementation.
+It also makes heavy use of the format of the code, i.e. it relies on the code being not only correct, but also well indented and structured.
+
+## Ideas behind this tool
+
+To avoid tremendous amount of unmaintainable regular expression, this work introduces the idea of `Element`s, and each `Element` comes with a `Parser` that identifies it.
+`Parser`s for advanced `Element`s are implemented by a composition of those for simpler `Element`s.
+An `Element` is basically a reference to a part of the code, combined with the data describing the code it points to.
+For example, a `FunctionHeaderElement` points to the part of the code starting with the function return type and ending with the closing `)`, and contains `WordElement`s which point to the return type, the function name, and the parameters, etc.
+A `FunctionHeaderParser` recognizes a dart function header in the code, and produces a `FunctionHeaderElement` that points to the part of the code.
+
+The biggest difference between `Parser`s and regular expressions are that the implementation of a `Parser`s may refer to itself directly or indirectly, which enables it to support recursion.
+At the same time, parsers are more flexible and informative.
+They are also much much more human friendly to deal with.
+
+With enough work, maybe I can make the set of `Parser`s and `Element` more and more complex, until they can cover the entire dart code.
+Then we almost get a compiler (without the code generation part).
+That is unfortunately too much work for me.
+It is beyond my ability to extend the `Parser`s to recognize even a complete function.
+The most they can do is to recognize some simple features.
+
+Without extending the `Parser`s to recognize complete classes and functions, however, it is difficult to locate the small features the `Parser`s recognizes.
+So I just go back to the old "find and replace" way.
+To make use of the structure of the code, this tool makes use of another ideas and call them `Block`s and `Locator`s.
+For example, the `ClassLocator` searches the code for class headers, then find the closing `}` with the same indentation level of the class header.
+Finally, `ClassLocator` produces a `ClassBlock` which points the the code of the class.
+The difference between a `Block` and an `Element` is that the block does not "understand" the code it points to, while an `Element` has all the information that describes the complete functionality of the referenced code.
+In another word, an `Element` is able to translate the code into another language with all the information it has, while a `Block` must deal with the code carefully.
+A `Block` should only translate the part of the code that it can "understand", while leaving others unchanged.
+
+To translate a block, the first thing is to search in it to identify some other smaller blocks and elements.
+Those blocks and elements should not intersect with each other.
+Then, translate those smaller blocks the elements, replace the part they refer to by what they are translated into.
