@@ -2,7 +2,8 @@ import unittest
 from eregex.parser import SpacePlainParser
 from eregex.test.data import code
 from eregex.locator import BlockFinder, LineFinder,\
-	next_line_start, next_line_start_or_here, indentation_at
+	next_line_start, next_line_start_or_here, indentation_at,\
+	start_of_line, contains_empty_line
 
 class TestGlobalFunctions(unittest.TestCase):
 	"""GlobalFunctions"""
@@ -44,6 +45,35 @@ V
 		self.assertEqual(next_line_start_or_here(text, 33), 33)
 
 		self.assertEqual(text[next_line_start(text, 0):next_line_start(text, 1)], "ABC DEF HIJK\n")
+
+	def test_start_of_line(self):
+		text = """
+ABC DEF HIJK
+  LMN OPQ RST
+U
+
+V
+"""
+		self.assertEqual(start_of_line(text, 0), 0)
+		self.assertEqual(start_of_line(text, 1), 1)
+		self.assertEqual(start_of_line(text, 3), 1)
+		self.assertEqual(start_of_line(text, 13), 1)
+		self.assertEqual(start_of_line(text, 14), 14)
+		self.assertEqual(start_of_line(text, 27), 14)
+		self.assertEqual(start_of_line(text, 28), 28)
+		self.assertEqual(start_of_line(text, 29), 28)
+		self.assertEqual(start_of_line(text, 30), 30)
+		self.assertEqual(start_of_line(text, 31), 31)
+		self.assertEqual(start_of_line(text, 32), 31)
+		self.assertEqual(start_of_line(text, 33), 33)
+
+	def test_contains_empty_line(self):
+		self.assertTrue(contains_empty_line("""
+
+			"""))
+		self.assertTrue(contains_empty_line("\n      \t\n"))
+		self.assertFalse(contains_empty_line("""abc
+			"""))
 
 	def test_indentation(self):
 		text = """
@@ -100,6 +130,19 @@ class TestFinders(unittest.TestCase):
 		line_finder = LineFinder(SpacePlainParser("final"), indentation="   ")
 		elements = line_finder.find_all(block.text, block.start, block.end)
 		self.assertEqual(len(elements), 0)
+
+	def test_block_finder_inside_block(self):
+		block_finder = BlockFinder(SpacePlainParser("class"), "}")
+		blocks = block_finder.find_all(code, 0)
+		self.assertEqual(len(blocks), 13)
+		block = blocks[0]
+
+		block_finder = BlockFinder(SpacePlainParser("BuildOp"), endchar=";", indentation="  ")
+		blocks = block_finder.find_all(block.text, block.start, block.end)
+		self.assertEqual(len(blocks), 1)
+		block = blocks[0]
+		self.assertEqual(block.content()[:10], "\n  BuildOp")
+		self.assertEqual(block.content()[-10:], "onWidgets;")
 
 
 if __name__ == '__main__':
