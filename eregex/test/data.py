@@ -465,10 +465,13 @@ class TextBlock extends TextBit {
     return parent.next;
   }
 
+  @override
   void addBit(TextBit bit, {int index}) =>
       _children.insert(index ?? _children.length, bit);
 
-  bool addSpace([String data]) {
+  @override
+  @deprecated
+  bool addSpace(String data) {
     final prev = last;
     if (prev == null) {
       if (data == null) return false;
@@ -486,7 +489,7 @@ class TextBlock extends TextBit {
 
   void addWidget(WidgetSpan ws) => addBit(WidgetBit(this, ws));
 
-  bool forEachBit(f(TextBit bit, int index), {bool reversed = false}) {
+  bool forEachBit(void f(TextBit bit, int index), {bool reversed = false}) {
     final l = _children.length;
     final i0 = reversed ? l - 1 : 0;
     final i1 = reversed ? -1 : l;

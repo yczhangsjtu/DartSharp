@@ -381,7 +381,7 @@ class FunctionModifierParser(object):
 
 class FunctionBlock(Block):
 	"""FunctionBlock"""
-	def __init__(self, text, start, end, indentation, header, inside_start, inside_end, is_arrow):
+	def __init__(self, text, start, end, indentation, header, inside_start, inside_end, is_arrow, modifiers):
 		super(FunctionBlock, self).__init__(text, start, end, indentation)
 		self.header = header
 		self.typename = header.typename
@@ -390,6 +390,7 @@ class FunctionBlock(Block):
 		self.inside_start = inside_start
 		self.inside_end = inside_end
 		self.is_arrow = is_arrow
+		self.modifiers = modifiers
 
 	def inside_content(self):
 		return self.text[self.inside_start:self.inside_end]
@@ -421,6 +422,11 @@ class FunctionLocator(object):
 		return locate_all(self, text, start, end)
 
 	def create_function_block(self, block):
+		if isinstance(block.element[0], FunctionModifierElement):
+			modifiers = block.element[0]
+		else:
+			modifiers = None
+
 		body_starter = block.element[-1]
 		is_arrow = body_starter.content() == "=>"
 		inside_start = body_starter.span[1]
@@ -430,5 +436,5 @@ class FunctionLocator(object):
 			inside_end = block.end - 2
 
 		return FunctionBlock(block.text, block.start, block.end, block.indentation,\
-			block.element[1], inside_start, inside_end, is_arrow)
+			block.element[1], inside_start, inside_end, is_arrow, modifiers)
 
