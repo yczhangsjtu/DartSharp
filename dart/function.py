@@ -356,6 +356,14 @@ class FunctionModifierElement(BasicElement):
 		super(FunctionModifierElement, self).__init__(text, start, end, span)
 		self.modifiers = modifiers
 
+	def contains(self, modifier):
+		if self.modifiers is None or len(self.modifiers) == 0:
+			return False
+		for m in self.modifiers:
+			if m.content() == modifier:
+				return True
+		return False
+
 
 class FunctionModifierParser(object):
 	"""FunctionModifierParser"""
@@ -391,6 +399,9 @@ class FunctionBlock(Block):
 		self.inside_end = inside_end
 		self.is_arrow = is_arrow
 		self.modifiers = modifiers
+		self.override = False
+		if modifiers is not None:
+			self.override = self.modifiers.contains("override")
 
 	def inside_content(self):
 		return self.text[self.inside_start:self.inside_end]

@@ -382,13 +382,16 @@ void f() {
 		self.assertEqual(function_blocks[0].modifiers.content(), "@override")
 		self.assertEqual(function_blocks[0].parameter_list.content(), "TextBit bit, {int index}")
 		self.assertEqual(function_blocks[0].inside_content(), "\n      _children.insert(index ?? _children.length, bit)")
+		self.assertTrue(function_blocks[0].override)
 		self.assertEqual(function_blocks[1].name.content(), "addSpace")
 		self.assertEqual(function_blocks[1].modifiers.content(), "@override\n  @deprecated")
 		self.assertEqual(function_blocks[1].parameter_list.content(), "String data")
 		self.assertEqual(function_blocks[1].inside_content()[-15:], "return true;\n  ")
+		self.assertTrue(function_blocks[1].override)
 		self.assertEqual(function_blocks[4].name.content(), "forEachBit")
 		self.assertEqual(function_blocks[4].parameter_list.content(), "void f(TextBit bit, int index), {bool reversed = false}")
 		self.assertEqual(function_blocks[4].inside_content()[-15:], "return true;\n  ")
+		self.assertFalse(function_blocks[4].override)
 		self.assertEqual(len(function_blocks), 9)
 
 
