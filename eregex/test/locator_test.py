@@ -2,7 +2,7 @@ import unittest
 from eregex.parser import SpacePlainParser
 from eregex.test.data import code
 from eregex.locator import BlockFinder, LineFinder,\
-	next_line_start, indentation_at
+	next_line_start, next_line_start_or_here, indentation_at
 
 class TestGlobalFunctions(unittest.TestCase):
 	"""GlobalFunctions"""
@@ -15,19 +15,33 @@ U
 V
 """
 		self.assertEqual(next_line_start(text, 0), 1)
+		self.assertEqual(next_line_start_or_here(text, 0), 0)
 		self.assertEqual(next_line_start(text, 1), 14)
+		self.assertEqual(next_line_start_or_here(text, 1), 1)
 		self.assertEqual(next_line_start(text, 2), 14)
+		self.assertEqual(next_line_start_or_here(text, 2), 14)
 		self.assertEqual(next_line_start(text, 5), 14)
+		self.assertEqual(next_line_start_or_here(text, 5), 14)
 		self.assertEqual(next_line_start(text, 13), 14)
+		self.assertEqual(next_line_start_or_here(text, 13), 14)
 		self.assertEqual(next_line_start(text, 14), 28)
+		self.assertEqual(next_line_start_or_here(text, 14), 14)
 		self.assertEqual(next_line_start(text, 15), 28)
+		self.assertEqual(next_line_start_or_here(text, 15), 28)
 		self.assertEqual(next_line_start(text, 27), 28)
+		self.assertEqual(next_line_start_or_here(text, 27), 28)
 		self.assertEqual(next_line_start(text, 28), 30)
+		self.assertEqual(next_line_start_or_here(text, 28), 28)
 		self.assertEqual(next_line_start(text, 29), 30)
+		self.assertEqual(next_line_start_or_here(text, 29), 30)
 		self.assertEqual(next_line_start(text, 30), 31)
+		self.assertEqual(next_line_start_or_here(text, 30), 30)
 		self.assertEqual(next_line_start(text, 31), 33)
+		self.assertEqual(next_line_start_or_here(text, 31), 31)
 		self.assertEqual(next_line_start(text, 32), 33)
+		self.assertEqual(next_line_start_or_here(text, 32), 33)
 		self.assertEqual(next_line_start(text, 33), 33)
+		self.assertEqual(next_line_start_or_here(text, 33), 33)
 
 		self.assertEqual(text[next_line_start(text, 0):next_line_start(text, 1)], "ABC DEF HIJK\n")
 

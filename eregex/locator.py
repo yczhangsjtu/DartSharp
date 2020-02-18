@@ -6,6 +6,13 @@ def next_line_start(text, pos):
 		return len(text)
 	return next_eol+1
 
+def next_line_start_or_here(text, pos):
+	"""Find next line start, or `pos` if `pos` is already a line start
+	"""
+	if pos == 0 or (pos-1 < len(text) and text[pos-1] == "\n"):
+		return pos
+	return next_line_start(text, pos)
+
 spaces = re.compile(r"[ \t]*")
 def indentation_at(text, pos):
 	global spaces
@@ -24,10 +31,11 @@ class Block:
 
 class BlockFinder(object):
 	"""BlockFinder"""
-	def __init__(self, parser, endline):
+	def __init__(self, parser, endline=None, endchar=None):
 		super(BlockFinder, self).__init__()
 		self.parser = parser
 		self.endline = endline
+		self.endchar = endchar
 
 	def find_all(self, text, start=0, end=-1):
 		if end < 0:
@@ -41,7 +49,7 @@ class BlockFinder(object):
 				continue
 
 			indentation = indentation_at(text, curr)
-			block_end = next_line_start(text, elem.span[1]-1)
+			block_end = next_line_start_or_here(text, elem.span[1])
 			while block_end < end:
 				next_end = next_line_start(text, block_end)
 				if next_end > end:
@@ -83,6 +91,6 @@ class LineFinder(object):
 				break
 
 			elements.append(elem)
-			curr = next_line_start(text, elem.span[1]-1)
+			curr = next_line_start_or_here(text, elem.span[1])
 
 		return elements
