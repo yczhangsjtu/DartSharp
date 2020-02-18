@@ -3,6 +3,7 @@ from eregex.parser import OptionalParser, JoinParser,\
 	SpacePlainParser, SpaceParser, TypeNameParser,\
 	ListParser, OrParser, EmptyParser
 from eregex.locator import Block, BlockLocator, locate_all
+from dart.function import FunctionLocator
 
 class ClassHeaderElement(BasicElement):
 	"""ClassHeaderElement"""
@@ -112,6 +113,7 @@ class ClassLocator(object):
 	def __init__(self, outer_indentation="", inner_indentation="  "):
 		super(ClassLocator, self).__init__()
 		self.locator = BlockLocator(ClassHeaderParser(), indentation=outer_indentation)
+		self.function_locator = FunctionLocator(outer_indentation=outer_indentation+inner_indentation, inner_indentation=inner_indentation)
 
 	def locate(self, text, pos):
 		block = self.locator.locate(text, pos)
@@ -124,4 +126,8 @@ class ClassLocator(object):
 		return locate_all(self, text, start, end)
 
 	def create_class_block(self, block):
-		return ClassBlock(block.text, block.start, block.end, block.indentation, block.element)
+		class_block = ClassBlock(block.text, block.start, block.end, block.indentation, block.element)
+		functions = self.function_locator.locate_all(class_block.text, class_block.inside_start, class_block.inside_end)
+		if len(functions) > 0:
+			class_block.functions = functions
+		return class_block

@@ -100,12 +100,25 @@ class TestClassLocator(unittest.TestCase):
 		self.assertFalse(class_blocks[0].is_abstract)
 		self.assertEqual(class_blocks[0].content()[-14:], "?? widgets;\n}\n")
 		self.assertEqual(class_blocks[0].inside_content()[-12:], "?? widgets;\n")
+		function_blocks = class_blocks[0].functions
+		self.assertEqual(function_blocks[0].name.content(), "defaultStyles")
+		self.assertEqual(function_blocks[0].parameter_list.content(), "NodeMetadata meta, dom.Element e")
+		self.assertEqual(function_blocks[0].inside_content(), "\n      _defaultStyles != null ? _defaultStyles(meta, e) : null")
+		self.assertEqual(function_blocks[0].content()[-31:], "_defaultStyles(meta, e) : null;")
+		self.assertEqual(function_blocks[1].name.content(), "onChild")
+		self.assertEqual(function_blocks[1].parameter_list.content(), "NodeMetadata meta, dom.Element e")
+		self.assertEqual(function_blocks[1].inside_content(), "\n      _onChild != null ? _onChild(meta, e) : meta")
+		self.assertEqual(function_blocks[2].name.content(), "onPieces")
+		self.assertEqual(function_blocks[2].parameter_list.content(), "NodeMetadata meta,\n    Iterable<BuiltPiece> pieces,")
+		self.assertEqual(function_blocks[2].inside_content(), "\n      _onPieces != null ? _onPieces(meta, pieces) : pieces")
+		self.assertEqual(len(function_blocks), 4)
 
 		self.assertEqual(class_blocks[1].name.content(), "BuilderContext")
 		self.assertEqual(class_blocks[1].with_mixes, None)
 		self.assertFalse(class_blocks[1].is_abstract)
 		self.assertEqual(class_blocks[1].content()[-16:], "this.origin);\n}\n")
 		self.assertEqual(class_blocks[1].inside_content()[-14:], "this.origin);\n")
+		self.assertEqual(class_blocks[1].functions, None)
 
 		self.assertEqual(class_blocks[2].name.content(), "BuiltPiece")
 		self.assertEqual(class_blocks[2].extends, None)
@@ -120,10 +133,20 @@ class TestClassLocator(unittest.TestCase):
 		self.assertEqual(class_blocks[6].name.content(), "CssMargin")
 		self.assertFalse(class_blocks[6].is_abstract)
 		self.assertEqual(class_blocks[6].content()[-27:], "..top = top ?? this.top;\n}\n")
+		function_blocks = class_blocks[6].functions
+		self.assertEqual(function_blocks[0].name.content(), "copyWith")
+		self.assertEqual(function_blocks[0].parameter_list.content(), "{\n    CssLength bottom,\n    CssLength left,\n    CssLength right,\n    CssLength top,\n  }")
+		self.assertEqual(function_blocks[0].inside_content(), "\n      CssMargin()\n        ..bottom = bottom ?? this.bottom\n        ..left = left ?? this.left\n        ..right = right ?? this.right\n        ..top = top ?? this.top")
+		self.assertEqual(len(function_blocks), 1)
 
 		self.assertEqual(class_blocks[7].name.content(), "CssLength")
 		self.assertFalse(class_blocks[7].is_abstract)
 		self.assertEqual(class_blocks[7].content()[-20:], "return value;\n  }\n}\n")
+		function_blocks = class_blocks[7].functions
+		self.assertEqual(function_blocks[0].name.content(), "getValue")
+		self.assertEqual(function_blocks[0].parameter_list.content(), "BuilderContext bc, TextStyleBuilders tsb")
+		self.assertEqual(function_blocks[0].inside_content()[-16:], "return value;\n  ")
+		self.assertEqual(len(function_blocks), 1)
 
 		self.assertEqual(class_blocks[11].name.content(), "SpaceBit")
 		self.assertFalse(class_blocks[11].is_abstract)
