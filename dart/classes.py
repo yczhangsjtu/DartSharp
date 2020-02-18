@@ -2,7 +2,7 @@ from eregex.element import BasicElement, JoinElement, ListElement
 from eregex.parser import OptionalParser, JoinParser,\
 	SpacePlainParser, SpaceParser, TypeNameParser,\
 	ListParser, OrParser, EmptyParser
-from eregex.locator import Block, BlockLocator
+from eregex.locator import Block, BlockLocator, locate_all
 
 class ClassHeaderElement(BasicElement):
 	"""ClassHeaderElement"""
@@ -101,12 +101,14 @@ class ClassBlock(Block):
 		self.setters = setters
 		self.getters = getters
 		self.attributes = attributes
+		self.inside_start = header.span[1]
+		self.inside_end = end-1
 
 class ClassLocator(object):
-	"""docstring for ClassLocator"""
-	def __init__(self):
+	"""ClassLocator"""
+	def __init__(self, outer_indentation="", inner_indentation="  "):
 		super(ClassLocator, self).__init__()
-		self.locator = BlockLocator(ClassHeaderParser())
+		self.locator = BlockLocator(ClassHeaderParser(), indentation=outer_indentation)
 
 	def locate(self, text, pos):
 		block = self.locator.locate(text, pos)
@@ -116,8 +118,7 @@ class ClassLocator(object):
 		return self.create_class_block(block)
 
 	def locate_all(self, text, start=0, end=-1):
-		blocks = self.locator.locate_all(text, start, end)
-		return list(map(lambda block: self.create_class_block(block), blocks))
+		return locate_all(self, text, start, end)
 
 	def create_class_block(self, block):
 		return ClassBlock(block.text, block.start, block.end, block.indentation, block.element)

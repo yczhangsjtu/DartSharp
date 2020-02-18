@@ -33,6 +33,22 @@ def contains_empty_line(text):
 	global empty_line
 	return empty_line.search(text) is not None
 
+def locate_all(locator, text, start=0, end=-1):
+	if end < 0:
+		end = len(text)
+
+	curr, blocks = next_line_start_or_here(text, start), []
+	while curr < end:
+		block = locator.locate(text, curr)
+		if block is None or block.end > end:
+			curr = next_line_start(text, curr)
+			continue
+
+		blocks.append(block)
+		curr = next_line_start_or_here(text, block.end)
+
+	return blocks
+
 class Block:
 	def __init__(self, text, start, end, indentation, element=None):
 		self.text = text
@@ -70,6 +86,11 @@ class BlockLocator(object):
 				if text[block_end:next_end] == indentation + self.endline or\
 					 text[block_end:next_end] == indentation + self.endline + "\n":
 					return Block(text, pos, next_end, indentation, element=elem)
+				if (not text[block_end:next_end].startswith(indentation) or\
+					 indentation_at(text, block_end) == indentation) and \
+					 text[block_end:next_end].strip() != "":
+					 print("Current line is %s" % text[block_end:next_end])
+					 return None
 				block_end = next_end
 			return None
 
@@ -83,20 +104,7 @@ class BlockLocator(object):
 		return Block(text, pos, end+1, indentation)
 
 	def locate_all(self, text, start=0, end=-1):
-		if end < 0:
-			end = len(text)
-
-		curr, blocks = start, []
-		while curr < end:
-			block = self.locate(text, curr)
-			if block is None or block.end > end:
-				curr = next_line_start(text, curr)
-				continue
-
-			blocks.append(block)
-			curr = next_line_start_or_here(text, block.end)
-
-		return blocks
+		return locate_all(self, text, start, end)
 
 class LineLocator(object):
 	"""LineLocator"""

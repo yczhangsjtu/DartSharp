@@ -5,8 +5,10 @@ from dart.function import NormalParameterItemElement,\
   SingleParameterListParser, ParameterListParser,\
   ConstructorParameterItemParser, ConstructorSingleParameterListParser,\
   ConstructorParameterListParser, FunctionalParameterItemElement,\
-  ParameterItemElement, ConstructorHeaderElement, ConstructorHeaderParser
-from data import lazy_set_func, build_op_class, node_meta_data_class
+  ParameterItemElement, ConstructorHeaderElement, ConstructorHeaderParser,\
+  FunctionHeaderParser, FunctionLocator
+from dart.classes import ClassLocator
+from data import lazy_set_func, build_op_class, node_meta_data_class, code
 
 class TestParameterElements(unittest.TestCase):
   """TestParameterElements"""
@@ -237,11 +239,6 @@ class TestParameterElements(unittest.TestCase):
   	self.assertEqual(elem.named[1].typename.content(), "int")
   	self.assertEqual(elem.named[1].default_value, None)
 
-
-if __name__ == '__main__':
-  unittest.main()
-
-
 class TestFunctionHeader(unittest.TestCase):
 	"""TestFunctionHeader"""
 	def test_function_header(self):
@@ -265,8 +262,8 @@ class TestFunctionHeader(unittest.TestCase):
 
 		pos = node_meta_data_class.find("void styles(void f(String key, String value))")
 		elem = parser.parse(node_meta_data_class, pos)
-		self.assertEqual(elem.name, "styles")
-		self.assertEqual(elem.typename, "void")
+		self.assertEqual(elem.name.content(), "styles")
+		self.assertEqual(elem.typename.content(), "void")
 		self.assertEqual(len(elem.parameter_list.positioned), 1)
 		self.assertEqual(elem.parameter_list.named, None)
 		self.assertEqual(elem.parameter_list.content(), "void f(String key, String value)")
@@ -274,8 +271,8 @@ class TestFunctionHeader(unittest.TestCase):
 
 		pos = node_meta_data_class.find("void f({void g(int a) = null, int b})")
 		elem = parser.parse(node_meta_data_class, pos)
-		self.assertEqual(elem.name, "f")
-		self.assertEqual(elem.typename, "void")
+		self.assertEqual(elem.name.content(), "f")
+		self.assertEqual(elem.typename.content(), "void")
 		self.assertEqual(len(elem.parameter_list.named), 2)
 		self.assertEqual(elem.parameter_list.positioned, None)
 		self.assertEqual(elem.parameter_list.content(), "{void g(int a) = null, int b}")
@@ -290,8 +287,8 @@ class TestFunctionHeader(unittest.TestCase):
 
 		pos = node_meta_data_class.find("void h(int o(), {void g(int a) = null, int b})")
 		elem = parser.parse(node_meta_data_class, pos)
-		self.assertEqual(elem.name, "h")
-		self.assertEqual(elem.typename, "void")
+		self.assertEqual(elem.name.content(), "h")
+		self.assertEqual(elem.typename.content(), "void")
 		self.assertEqual(len(elem.parameter_list.named), 2)
 		self.assertEqual(len(elem.parameter_list.positioned), 1)
 		self.assertEqual(elem.parameter_list.content(), "int o(), {void g(int a) = null, int b}")
@@ -316,8 +313,23 @@ class TestFunctionHeader(unittest.TestCase):
 		self.assertEqual(elem.parameter_list.positioned, None)
 		self.assertEqual(elem.parameter_list.named[0].content(), "BuildOpDefaultStyles defaultStyles")
 		self.assertEqual(elem.parameter_list.named[-1].content(), "this.priority = 10")
-		self.assertEqual(elem.content()[-4:0], "  })")
+		self.assertEqual(elem.content()[-4:], "  })")
 
+class TestFunctionLocator(unittest.TestCase):
+	"""docstring for TestFunctionLocator"""
+
+	def test_function_locator(self):
+		locator = ClassLocator()
+		class_blocks = locator.locate_all(code)
+		self.assertEqual(len(class_blocks), 15)
+
+		locator = FunctionLocator()
+		function_blocks = locator.locate_all(code)
+		self.assertEqual(len(function_blocks), 1)
+		function_block = function_blocks[0]
+		self.assertEqual(function_block.typename.content(), "NodeMetadata")
+		self.assertEqual(function_block.name.content(), "lazySet")
+		self.assertEqual(function_block.content()[-15:], "return meta;\n}\n")
 
 
 if __name__ == '__main__':

@@ -3,6 +3,7 @@ from eregex.parser import TypeNameParser,\
 	SpaceParser, WordParser, OrParser, BasicParser,\
 	JoinParser, SpacePlainParser, OptionalParser, ListParser,\
 	EmptyParser
+from eregex.locator import Block, BlockLocator, locate_all
 from dart.expression import SimpleExpressionParser
 
 class NormalParameterItemElement(BasicElement):
@@ -333,7 +334,7 @@ class ConstructorHeaderParser(object):
 		self.parser = JoinParser([
 			SpacePlainParser(class_name),
 			SpacePlainParser("("),
-			ParameterListParser(),
+			ConstructorParameterListParser(),
 			SpacePlainParser(")"),
 		])
 
@@ -343,5 +344,51 @@ class ConstructorHeaderParser(object):
 			return None
 
 		name, parameter_list = elem[0], elem[2]
-		return FunctionHeaderElement(text, elem.end, name, parameter_list, elem.span)
+		return ConstructorHeaderElement(text, elem.end, name, parameter_list, elem.span)
+
+class FunctionBlock(Block):
+	"""FunctionBlock"""
+	def __init__(self, text, start, end, indentation, header, inside_start, inside_end, is_arrow):
+		super(FunctionBlock, self).__init__(text, start, end, indentation)
+		self.header = header
+		self.typename = header.typename
+		self.name = header.name
+		self.parameter_list = header.parameter_list
+		self.inside_start = inside_start
+		self.inside_end = inside_end
+		self.is_arrow = is_arrow
+
+class FunctionLocator(object):
+	"""FunctionLocator"""
+	def __init__(self, outer_indentation="", inner_indentation="  "):
+		super(FunctionLocator, self).__init__()
+		self.brace_function_locator = BlockLocator(
+			JoinParser([FunctionHeaderParser(), SpacePlainParser("{")]),
+			indentation=outer_indentation)
+		self.arrow_function_locator = BlockLocator(
+			JoinParser([FunctionHeaderParser(), SpacePlainParser("=>")]),
+			endchar=";",
+			indentation=outer_indentation)
+
+	def locate(self, text, pos):
+		block = self.brace_function_locator.locate(text, pos)
+
+		if block is None:
+			block = self.arrow_function_locator.locate(text, pos)
+
+		if block is None:
+			return None
+
+		return self.create_function_block(block)
+
+	def locate_all(self, text, start=0, end=-1):
+		return locate_all(self, text, start, end)
+
+	def create_function_block(self, block):
+		is_arrow = block.element[1].content() == "=>"
+		inside_start = block.element[1].span[1]
+		inside_end = block.end - 1
+
+		return FunctionBlock(block.text, block.start, block.end, block.indentation,\
+			block.element[0], inside_start, inside_end, is_arrow)
 
