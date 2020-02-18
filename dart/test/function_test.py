@@ -6,7 +6,9 @@ from dart.function import NormalParameterItemElement,\
   ConstructorParameterItemParser, ConstructorSingleParameterListParser,\
   ConstructorParameterListParser, FunctionalParameterItemElement,\
   ParameterItemElement, ConstructorHeaderElement, ConstructorHeaderParser,\
-  FunctionHeaderParser, FunctionLocator, FunctionModifierParser
+  FunctionHeaderParser, FunctionLocator, FunctionModifierParser,\
+  ConstructorLocator
+
 from dart.classes import ClassLocator
 from data import lazy_set_func, build_op_class, node_meta_data_class, code
 
@@ -393,6 +395,31 @@ void f() {
 		self.assertEqual(function_blocks[4].inside_content()[-15:], "return true;\n  ")
 		self.assertFalse(function_blocks[4].override)
 		self.assertEqual(len(function_blocks), 9)
+
+	def test_constructor_locator(self):
+		locator = ClassLocator()
+		class_blocks = locator.locate_all(code)
+		self.assertEqual(len(class_blocks), 15)
+
+		self.assertEqual(class_blocks[0].name.content(), "BuildOp")
+		locator = ConstructorLocator("BuildOp", outer_indentation="  ")
+		constructor_blocks = locator.locate_all(code, class_blocks[0].inside_start, class_blocks[0].inside_end)
+		self.assertEqual(len(constructor_blocks), 1)
+		constructor_block = constructor_blocks[0]
+		self.assertEqual(constructor_block.name.content(), "BuildOp")
+		self.assertEqual(constructor_block.initializer_content()[0:31], " _defaultStyles = defaultStyles")
+		self.assertEqual(constructor_block.initializer_content()[-22:], "_onWidgets = onWidgets")
+		self.assertEqual(constructor_block.braced_content(), None)
+
+		self.assertEqual(class_blocks[1].name.content(), "BuilderContext")
+		locator = ConstructorLocator("BuilderContext", outer_indentation="  ")
+		constructor_blocks = locator.locate_all(code, class_blocks[1].inside_start, class_blocks[1].inside_end)
+		self.assertEqual(len(constructor_blocks), 1)
+		constructor_block = constructor_blocks[0]
+		self.assertEqual(constructor_block.name.content(), "BuilderContext")
+		self.assertEqual(constructor_block.initializer_content(), None)
+		self.assertEqual(constructor_block.braced_content(), None)
+		self.assertEqual(constructor_block.content(), "\n  BuilderContext(this.context, this.origin);")
 
 
 if __name__ == '__main__':

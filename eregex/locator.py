@@ -101,7 +101,6 @@ class BlockLocator(object):
 				if (not text[block_end:next_end].startswith(indentation) or\
 					 indentation_at(text, block_end) == indentation) and \
 					 text[block_end:next_end].strip() != "":
-					 print("Current line is %s" % text[block_end:next_end])
 					 return None
 				block_end = next_end
 			return None

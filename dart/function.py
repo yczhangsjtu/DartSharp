@@ -449,3 +449,84 @@ class FunctionLocator(object):
 		return FunctionBlock(block.text, block.start, block.end, block.indentation,\
 			block.element[1], inside_start, inside_end, is_arrow, modifiers)
 
+class ConstructorBlock(Block):
+	"""ConstructorBlock"""
+	def __init__(self, text, start, end, indentation, header,
+			initializer_start=None, initializer_end=None, open_brace=None, close_brace=None):
+		super(ConstructorBlock, self).__init__(text, start, end, indentation)
+		self.header = header
+		self.name = self.header.name
+		self.parameter_list = self.header.parameter_list
+		self.initializer_start = initializer_start
+		self.initializer_end = initializer_end
+		self.open_brace = open_brace
+		self.close_brace = close_brace
+
+	def initializer_content(self):
+		if self.initializer_start is None or self.initializer_end is None:
+			return None
+		return self.text[self.initializer_start:self.initializer_end]
+
+	def braced_content(self):
+		if self.open_brace is None or self.close_brace is None:
+			return None
+		return self.text[self.open_brace+1:self.close_brace]
+
+class ConstructorLocator(object):
+	"""ConstructorLocator"""
+	def __init__(self, name, outer_indentation="", inner_indentation="  "):
+		super(ConstructorLocator, self).__init__()
+		self.brace_locator = BlockLocator(
+			JoinParser([ConstructorHeaderParser(name), OrParser([
+				SpacePlainParser(":"),
+				SpacePlainParser("{")
+			])]),
+			indentation=outer_indentation)
+		self.no_brace_locator = BlockLocator(
+			JoinParser([ConstructorHeaderParser(name), OptionalParser(
+				SpacePlainParser(":")
+			)]),
+			endchar=";",
+			indentation=outer_indentation)
+
+	def locate(self, text, pos):
+		block = self.brace_locator.locate(text, pos)
+
+		if block is None:
+			block = self.no_brace_locator.locate(text, pos)
+
+		if block is None:
+			return None
+
+		return self.create_constructor_block(block)
+
+	def locate_all(self, text, start=0, end=-1):
+		return locate_all(self, text, start, end)
+
+	def create_constructor_block(self, block):
+		header = block.element[0]
+		endchar = block.content().strip()[-1]
+		if block.element[1].content() == ":":
+			initializer_start = block.element[1].span[1]
+		else:
+			initializer_start = None
+		initializer_end = None
+
+		if endchar == ";":
+			open_brace, close_brace = None, None
+			if initializer_start is not None:
+				initializer_end = block.end-1
+		else:
+			open_brace = block.text.find("{", header.span[1])
+			if block.text[open_brace] != "{":
+				raise Exception("Open brace { not found as expected!")
+			if initializer_start is not None:
+				initializer_end = open_brace
+			close_brace = block.end-2
+
+			if block.text[close_brace] != "}":
+				raise Exception("Close brace } not found as expected!")
+
+		return ConstructorBlock(block.text, block.start, block.end, block.indentation, header,
+			initializer_start, initializer_end, open_brace, close_brace)
+
