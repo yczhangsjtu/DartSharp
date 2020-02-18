@@ -22,14 +22,14 @@ class Block:
 	def content(self):
 		return self.text[self.start:self.end]
 
-class BlockLocator(object):
-	"""BlockLocator"""
+class BlockFinder(object):
+	"""BlockFinder"""
 	def __init__(self, parser, endline):
-		super(BlockLocator, self).__init__()
+		super(BlockFinder, self).__init__()
 		self.parser = parser
 		self.endline = endline
 
-	def locate(self, text, start=0, end=-1):
+	def find_all(self, text, start=0, end=-1):
 		if end < 0:
 			end = len(text)
 
@@ -60,14 +60,14 @@ class BlockLocator(object):
 
 		return blocks
 
-class LineLocator(object):
-	"""LineLocator"""
+class LineFinder(object):
+	"""LineFinder"""
 	def __init__(self, parser, indentation=None):
-		super(LineLocator, self).__init__()
+		super(LineFinder, self).__init__()
 		self.parser = parser
 		self.indentation = indentation
 
-	def locate(self, text, start=0, end=-1):
+	def find_all(self, text, start=0, end=-1):
 		if end < 0:
 			end = len(text)
 

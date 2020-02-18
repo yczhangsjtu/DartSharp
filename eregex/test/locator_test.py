@@ -1,7 +1,7 @@
 import unittest
 from eregex.parser import SpacePlainParser
 from eregex.test.data import code
-from eregex.locator import BlockLocator, LineLocator,\
+from eregex.locator import BlockFinder, LineFinder,\
 	next_line_start, indentation_at
 
 class TestGlobalFunctions(unittest.TestCase):
@@ -51,22 +51,20 @@ V
 		self.assertEqual(indentation_at(text, 19), "\t\t")
 		self.assertEqual(indentation_at(text, 23), "")
 
-class TestBlockLocator(unittest.TestCase):
-	"""TestBlockLocator"""
-	def test_block_locator(self):
-		locator = BlockLocator(SpacePlainParser("class"), "}")
-		blocks = locator.locate(code, 0)
+class TestFinders(unittest.TestCase):
+	"""TestFinders"""
+	def test_block_finder(self):
+		finder = BlockFinder(SpacePlainParser("class"), "}")
+		blocks = finder.find_all(code, 0)
 		self.assertEqual(len(blocks), 13)
 		self.assertEqual(blocks[0].content()[:16], "\nclass BuildOp {")
 		self.assertEqual(blocks[0].content()[-2:], "}\n")
 		self.assertEqual(blocks[-1].content()[:26], "\nclass TextStyleBuilders {")
 		self.assertEqual(blocks[-1].content()[-2:], "}\n")
 
-class TestLineLocator(unittest.TestCase):
-	"""TestLineLocator"""
-	def test_line_locator(self):
-		locator = LineLocator(SpacePlainParser("typedef"))
-		elements = locator.locate(code, 0)
+	def test_line_finder(self):
+		finder = LineFinder(SpacePlainParser("typedef"))
+		elements = finder.find_all(code, 0)
 		self.assertEqual(len(elements), 6)
 		self.assertEqual(code[elements[0].start:elements[0].start+24], "typedef Iterable<String>")
 		self.assertEqual(code[elements[1].start:elements[1].start+20], "typedef NodeMetadata")
@@ -75,18 +73,18 @@ class TestLineLocator(unittest.TestCase):
 		self.assertEqual(code[elements[4].start:elements[4].start+20], "typedef NodeMetadata")
 		self.assertEqual(code[elements[5].start:elements[5].start+17], "typedef TextStyle")
 
-	def test_line_locator_inside_block(self):
-		block_locator = BlockLocator(SpacePlainParser("class"), "}")
-		blocks = block_locator.locate(code, 0)
+	def test_line_finder_inside_block(self):
+		block_finder = BlockFinder(SpacePlainParser("class"), "}")
+		blocks = block_finder.find_all(code, 0)
 		self.assertEqual(len(blocks), 13)
 		block = blocks[0]
 
-		line_locator = LineLocator(SpacePlainParser("final"), indentation="  ")
-		elements = line_locator.locate(block.text, block.start, block.end)
+		line_finder = LineFinder(SpacePlainParser("final"), indentation="  ")
+		elements = line_finder.find_all(block.text, block.start, block.end)
 		self.assertEqual(len(elements), 6)
 
-		line_locator = LineLocator(SpacePlainParser("final"), indentation="   ")
-		elements = line_locator.locate(block.text, block.start, block.end)
+		line_finder = LineFinder(SpacePlainParser("final"), indentation="   ")
+		elements = line_finder.find_all(block.text, block.start, block.end)
 		self.assertEqual(len(elements), 0)
 
 
