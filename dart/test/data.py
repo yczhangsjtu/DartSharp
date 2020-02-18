@@ -1,3 +1,4 @@
+from eregex.test.data import code
 
 lazy_set_func="""
 NodeMetadata lazySet(
@@ -224,3 +225,4 @@ abstract class MyFourthClass<T,K>
   with BaseClass {
 }
 """
+

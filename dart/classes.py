@@ -2,6 +2,7 @@ from eregex.element import BasicElement, JoinElement, ListElement
 from eregex.parser import OptionalParser, JoinParser,\
 	SpacePlainParser, SpaceParser, TypeNameParser,\
 	ListParser, OrParser, EmptyParser
+from eregex.locator import Block, BlockLocator
 
 class ClassHeaderElement(BasicElement):
 	"""ClassHeaderElement"""
@@ -82,3 +83,41 @@ class ClassHeaderParser(object):
 		return ClassHeaderElement(text, start, elem[4].end, elem.span,\
 			name, is_abstract, extends, with_mixes, implements)
 
+class ClassBlock(Block):
+	"""ClassBlock"""
+	def __init__(self, text, start, end, indentation, header,\
+			constructors=None, functions=None, abstract_functions=None,\
+			setters=None, getters=None, attributes=None):
+		super(ClassBlock, self).__init__(text, start, end, indentation)
+		self.header = header
+		self.is_abstract = header.is_abstract
+		self.name = header.name
+		self.extends = header.extends
+		self.with_mixes = header.with_mixes
+		self.implements = header.implements
+		self.constructors = constructors
+		self.functions = functions
+		self.abstract_functions = abstract_functions
+		self.setters = setters
+		self.getters = getters
+		self.attributes = attributes
+
+class ClassLocator(object):
+	"""docstring for ClassLocator"""
+	def __init__(self):
+		super(ClassLocator, self).__init__()
+		self.locator = BlockLocator(ClassHeaderParser())
+
+	def locate(self, text, pos):
+		block = self.locator.locate(text, pos)
+		if block is None:
+			return None
+
+		return self.create_class_block(block)
+
+	def locate_all(self, text, start=0, end=-1):
+		blocks = self.locator.locate_all(text, start, end)
+		return list(map(lambda block: self.create_class_block(block), blocks))
+
+	def create_class_block(self, block):
+		return ClassBlock(block.text, block.start, block.end, block.indentation, block.element)

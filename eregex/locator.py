@@ -34,19 +34,20 @@ def contains_empty_line(text):
 	return empty_line.search(text) is not None
 
 class Block:
-	def __init__(self, text, start, end, indentation):
+	def __init__(self, text, start, end, indentation, element=None):
 		self.text = text
 		self.start = start
 		self.end = end
 		self.indentation = indentation
+		self.element = element
 
 	def content(self):
 		return self.text[self.start:self.end]
 
-class BlockFinder(object):
-	"""BlockFinder"""
+class BlockLocator(object):
+	"""BlockLocator"""
 	def __init__(self, parser, endline=None, endchar=None, indentation=None):
-		super(BlockFinder, self).__init__()
+		super(BlockLocator, self).__init__()
 		self.parser = parser
 		if endline is None and endchar is None:
 			endline = "}"
@@ -54,7 +55,7 @@ class BlockFinder(object):
 		self.endchar = endchar
 		self.indentation = indentation
 
-	def find_at(self, text, pos):
+	def locate(self, text, pos):
 		elem = self.parser.parse(text, pos)
 		if elem is None:
 			return None
@@ -68,7 +69,7 @@ class BlockFinder(object):
 				next_end = next_line_start(text, block_end)
 				if text[block_end:next_end] == indentation + self.endline or\
 					 text[block_end:next_end] == indentation + self.endline + "\n":
-					return Block(text, pos, next_end, indentation)
+					return Block(text, pos, next_end, indentation, element=elem)
 				block_end = next_end
 			return None
 
@@ -81,13 +82,13 @@ class BlockFinder(object):
 
 		return Block(text, pos, end+1, indentation)
 
-	def find_all(self, text, start=0, end=-1):
+	def locate_all(self, text, start=0, end=-1):
 		if end < 0:
 			end = len(text)
 
 		curr, blocks = start, []
 		while curr < end:
-			block = self.find_at(text, curr)
+			block = self.locate(text, curr)
 			if block is None or block.end > end:
 				curr = next_line_start(text, curr)
 				continue
@@ -97,14 +98,14 @@ class BlockFinder(object):
 
 		return blocks
 
-class LineFinder(object):
-	"""LineFinder"""
+class LineLocator(object):
+	"""LineLocator"""
 	def __init__(self, parser, indentation=None):
-		super(LineFinder, self).__init__()
+		super(LineLocator, self).__init__()
 		self.parser = parser
 		self.indentation = indentation
 
-	def find_all(self, text, start=0, end=-1):
+	def locate_all(self, text, start=0, end=-1):
 		if end < 0:
 			end = len(text)
 
