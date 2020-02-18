@@ -1,7 +1,8 @@
 import re
 from eregex.element import BasicElement, WordElement,\
 	StringElement, NumberElement, BoolElement,\
-	JoinElement, ListElement, TypeNameElement
+	JoinElement, ListElement, TypeNameElement,\
+	WordDotElement
 
 class BasicParser:
 
@@ -58,6 +59,32 @@ class WordParser:
 	def parse(self, text, pos):
 		global _word_parser
 		return _word_parser.parse(text, pos)
+
+
+class _WordDotParser(object):
+	def __init__(self):
+		super(_WordDotParser, self).__init__()
+		self.basic_parser = BasicParser(r"\s*\b([_A-Za-z]\w*(?:[.][_A-Za-z]\w*)*)\b")
+
+	def parse(self, text, pos):
+		basic_elem = self.basic_parser.parse(text, pos)
+		if basic_elem is None:
+			return None
+		return WordDotElement(text, basic_elem.start, basic_elem.end, basic_elem.span)
+
+_word_dot_parser = None
+class WordDotParser:
+	"""Parse words, possibly connected by dots, in text at given position,
+	get a WordDotElement"""
+	def __init__(self):
+		global _word_dot_parser
+		if _word_dot_parser is None:
+			_word_dot_parser = _WordDotParser()
+
+	def parse(self, text, pos):
+		global _word_dot_parser
+		return _word_dot_parser.parse(text, pos)
+
 
 
 
@@ -344,7 +371,7 @@ class _TypeNameParser(object):
 		super(_TypeNameParser, self).__init__()
 		self.parser = OrParser([
 			JoinParser([
-				WordParser(),
+				WordDotParser(),
 				ListParser(
 					self,
 					SpacePlainParser(","),
@@ -352,7 +379,7 @@ class _TypeNameParser(object):
 					postfix = SpacePlainParser(">")
 				)
 			]),
-			WordParser()
+			WordDotParser()
 		])
 
 	def parse(self, text, pos):
@@ -360,7 +387,7 @@ class _TypeNameParser(object):
 		if elem is None:
 			return None
 
-		if type(elem) is WordElement:
+		if type(elem) is WordDotElement:
 			return TypeNameElement(text, elem, span=elem.span)
 
 		if type(elem) is JoinElement:
@@ -369,7 +396,7 @@ class _TypeNameParser(object):
 
 			return TypeNameElement(text, elem[0], elem[1], elem.span)
 
-		raise Exception("This element should be either WordElement or JoinElement")
+		raise Exception("This element should be either WordDotElement or JoinElement")
 
 _typename_parser = None
 class TypeNameParser:

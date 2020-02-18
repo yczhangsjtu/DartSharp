@@ -4,7 +4,7 @@ from eregex.parser import BasicParser, WordParser,\
 	PlainParser, SpacePlainParser, SpaceParser,\
 	JoinParser, OrParser, StringParser, NumberParser,\
 	BoolParser, ListParser, TypeNameParser, EmptyParser,\
-	OptionalParser
+	OptionalParser, WordDotParser
 
 from eregex.test.data import text
 
@@ -54,6 +54,11 @@ class TestBasicParser(unittest.TestCase):
 		elem = parser.parse(text, pos - 1)
 		self.assertEqual(elem.content(), "_1")
 
+		pos = text.find("abc.def")
+		parser = WordParser()
+		elem = parser.parse(text, pos - 1)
+		self.assertEqual(elem.content(), "abc")
+
 	def test_not_word_parser(self):
 
 		pos = text.find("0123")
@@ -73,6 +78,65 @@ class TestBasicParser(unittest.TestCase):
 
 		pos = text.find("1__")
 		parser = WordParser()
+		elem = parser.parse(text, pos)
+		self.assertEqual(elem, None)
+
+		pos = text.find(" .def")
+		parser = WordParser()
+		elem = parser.parse(text, pos)
+		self.assertEqual(elem, None)
+
+	def test_word_dot_parser(self):
+
+		pos = text.find("printf")
+		parser = WordDotParser()
+		elem = parser.parse(text, pos - 1)
+		self.assertEqual(elem.content(), "printf")
+
+		pos = text.find("abc0")
+		parser = WordDotParser()
+		elem = parser.parse(text, pos)
+		self.assertEqual(elem.content(), "abc0")
+
+		pos = text.find("_1")
+		parser = WordDotParser()
+		elem = parser.parse(text, pos - 1)
+		self.assertEqual(elem.content(), "_1")
+
+		pos = text.find("abc.def")
+		parser = WordDotParser()
+		elem = parser.parse(text, pos - 1)
+		self.assertEqual(elem.content(), "abc.def")
+
+	def test_not_word_dot_parser(self):
+
+		pos = text.find("0123")
+		parser = WordDotParser()
+		elem = parser.parse(text, pos - 1)
+		self.assertEqual(elem, None)
+
+		pos = text.find("0abc")
+		parser = WordDotParser()
+		elem = parser.parse(text, pos)
+		self.assertEqual(elem, None)
+
+		pos = text.find("1_")
+		parser = WordDotParser()
+		elem = parser.parse(text, pos - 1)
+		self.assertEqual(elem, None)
+
+		pos = text.find("1__")
+		parser = WordDotParser()
+		elem = parser.parse(text, pos)
+		self.assertEqual(elem, None)
+
+		pos = text.find("abc. ")
+		parser = WordDotParser()
+		elem = parser.parse(text, pos)
+		self.assertEqual(elem.content(), "abc")
+
+		pos = text.find(" .def")
+		parser = WordDotParser()
 		elem = parser.parse(text, pos)
 		self.assertEqual(elem, None)
 
@@ -141,7 +205,7 @@ class TestCompositeParser(unittest.TestCase):
 	def test_or_parser(self):
 		parser = OrParser([
 			PlainParser("\"Hello World\""),
-			PlainParser("\"Hello 0123 0abc abc0 _1 1_ 1__\"")
+			PlainParser("\"Hello 0123 0abc abc0 _1 1_ 1__ abc.def abc. .def\"")
 		])
 		pos = text.find("printf")
 		elem = parser.parse(text, pos + 7)
@@ -149,7 +213,7 @@ class TestCompositeParser(unittest.TestCase):
 
 		pos = text.find("printf(\"Hello 0123")
 		elem = parser.parse(text, pos + 7)
-		self.assertEqual(elem.content(), "\"Hello 0123 0abc abc0 _1 1_ 1__\"")
+		self.assertEqual(elem.content(), "\"Hello 0123 0abc abc0 _1 1_ 1__ abc.def abc. .def\"")
 
 		elem = parser.parse(text, pos + 8)
 		self.assertEqual(elem, None)
@@ -182,7 +246,7 @@ class TestSpecialParser(unittest.TestCase):
 
 		pos = text.find("printf(\"Hello 0123")
 		elem = parser.parse(text, pos + 7)
-		self.assertEqual(elem.content(), "\"Hello 0123 0abc abc0 _1 1_ 1__\"")
+		self.assertEqual(elem.content(), "\"Hello 0123 0abc abc0 _1 1_ 1__ abc.def abc. .def\"")
 
 		pos = text.find("printf(\n")
 		elem = parser.parse(text, pos + 7)

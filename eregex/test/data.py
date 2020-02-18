@@ -7,7 +7,7 @@ Below is a C program */
 
 int main() {
 	printf("Hello World");
-	printf("Hello 0123 0abc abc0 _1 1_ 1__");
+	printf("Hello 0123 0abc abc0 _1 1_ 1__ abc.def abc. .def");
 	printf(
 	 "Hello World!\"\\"
 	);

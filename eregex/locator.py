@@ -101,7 +101,7 @@ class BlockLocator(object):
 		if contains_empty_line(text[elem.span[1]:end]):
 			return None
 
-		return Block(text, pos, end+1, indentation)
+		return Block(text, pos, end+1, indentation, element=elem)
 
 	def locate_all(self, text, start=0, end=-1):
 		return locate_all(self, text, start, end)

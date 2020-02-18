@@ -36,6 +36,8 @@ class BasicElement:
 class WordElement(BasicElement):
 	pass
 
+class WordDotElement(BasicElement):
+	pass
 
 class StringElement(BasicElement):
 	pass

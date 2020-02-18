@@ -331,6 +331,12 @@ class TestFunctionLocator(unittest.TestCase):
 		self.assertEqual(function_block.name.content(), "lazySet")
 		self.assertEqual(function_block.content()[-15:], "return meta;\n}\n")
 
+		locator = FunctionLocator(outer_indentation="  ")
+		function_blocks = locator.locate_all(code, class_blocks[0].inside_start, class_blocks[0].inside_end)
+		self.assertEqual(function_blocks[0].name.content(), "defaultStyles")
+		self.assertEqual(len(function_blocks), 4)
+
+
 
 if __name__ == '__main__':
 	unittest.main()
