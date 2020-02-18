@@ -99,11 +99,13 @@ class TestClassLocator(unittest.TestCase):
 		self.assertEqual(class_blocks[0].name.content(), "BuildOp")
 		self.assertFalse(class_blocks[0].is_abstract)
 		self.assertEqual(class_blocks[0].content()[-14:], "?? widgets;\n}\n")
+		self.assertEqual(class_blocks[0].inside_content()[-12:], "?? widgets;\n")
 
 		self.assertEqual(class_blocks[1].name.content(), "BuilderContext")
 		self.assertEqual(class_blocks[1].with_mixes, None)
 		self.assertFalse(class_blocks[1].is_abstract)
 		self.assertEqual(class_blocks[1].content()[-16:], "this.origin);\n}\n")
+		self.assertEqual(class_blocks[1].inside_content()[-14:], "this.origin);\n")
 
 		self.assertEqual(class_blocks[2].name.content(), "BuiltPiece")
 		self.assertEqual(class_blocks[2].extends, None)

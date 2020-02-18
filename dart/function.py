@@ -307,6 +307,10 @@ class _FunctionHeaderParser(object):
 			return None
 
 		typename, name, parameter_list = elem[0], elem[2], elem[4]
+
+		if typename.content() == "set":
+			return None
+
 		return FunctionHeaderElement(text, elem.end, typename, name, parameter_list, elem.span)
 
 class FunctionHeaderParser(object):
@@ -346,6 +350,35 @@ class ConstructorHeaderParser(object):
 		name, parameter_list = elem[0], elem[2]
 		return ConstructorHeaderElement(text, elem.end, name, parameter_list, elem.span)
 
+class FunctionModifierElement(BasicElement):
+	"""docstring for FunctionModiferElement"""
+	def __init__(self, text, start, end, span, modifiers):
+		super(FunctionModifierElement, self).__init__(text, start, end, span)
+		self.modifiers = modifiers
+
+
+class FunctionModifierParser(object):
+	"""FunctionModifierParser"""
+	def __init__(self):
+		super(FunctionModifierParser, self).__init__()
+		self.parser = OptionalParser(ListParser(
+			JoinParser([SpacePlainParser("@"), WordParser()]),
+			SpaceParser(),
+			allow_trailing_seperater=False
+		))
+
+	def parse(self, text, pos):
+		elem = self.parser.parse(text, pos)
+		if elem is None:
+			return None
+
+		if isinstance(elem, ListElement):
+			return FunctionModifierElement(text, elem.start, elem.end, elem.span,\
+				list(map(lambda elem: elem[1], elem.elements)))
+
+		return elem
+
+
 class FunctionBlock(Block):
 	"""FunctionBlock"""
 	def __init__(self, text, start, end, indentation, header, inside_start, inside_end, is_arrow):
@@ -358,15 +391,18 @@ class FunctionBlock(Block):
 		self.inside_end = inside_end
 		self.is_arrow = is_arrow
 
+	def inside_content(self):
+		return self.text[self.inside_start:self.inside_end]
+
 class FunctionLocator(object):
 	"""FunctionLocator"""
 	def __init__(self, outer_indentation="", inner_indentation="  "):
 		super(FunctionLocator, self).__init__()
 		self.brace_function_locator = BlockLocator(
-			JoinParser([FunctionHeaderParser(), SpacePlainParser("{")]),
+			JoinParser([FunctionModifierParser(), FunctionHeaderParser(), SpacePlainParser("{")]),
 			indentation=outer_indentation)
 		self.arrow_function_locator = BlockLocator(
-			JoinParser([FunctionHeaderParser(), SpacePlainParser("=>")]),
+			JoinParser([FunctionModifierParser(), FunctionHeaderParser(), SpacePlainParser("=>")]),
 			endchar=";",
 			indentation=outer_indentation)
 
@@ -385,10 +421,14 @@ class FunctionLocator(object):
 		return locate_all(self, text, start, end)
 
 	def create_function_block(self, block):
-		is_arrow = block.element[1].content() == "=>"
-		inside_start = block.element[1].span[1]
-		inside_end = block.end - 1
+		body_starter = block.element[-1]
+		is_arrow = body_starter.content() == "=>"
+		inside_start = body_starter.span[1]
+		if is_arrow:
+			inside_end = block.end - 1
+		else:
+			inside_end = block.end - 2
 
 		return FunctionBlock(block.text, block.start, block.end, block.indentation,\
-			block.element[0], inside_start, inside_end, is_arrow)
+			block.element[1], inside_start, inside_end, is_arrow)
 

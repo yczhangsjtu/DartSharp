@@ -22,11 +22,21 @@ def next_line_start_or_here(text, pos):
 		return pos
 	return next_line_start(text, pos)
 
+def next_nonspace(text, pos):
+	mat = re.match(r"\s*", text[pos:])
+	return pos + len(mat.group(0))
+
 spaces = re.compile(r"[ \t]*")
 def indentation_at(text, pos):
 	global spaces
 	mat = spaces.match(text[pos:])
 	return mat.group(0)
+
+def is_empty_line_at(text, pos):
+	global spaces
+	pos = start_of_line(text, pos)
+	next_line = next_line_start(text, pos)
+	return text[pos:next_line].strip() == ""
 
 empty_line = re.compile(r"\n\s*\n")
 def contains_empty_line(text):
@@ -75,7 +85,9 @@ class BlockLocator(object):
 		elem = self.parser.parse(text, pos)
 		if elem is None:
 			return None
-		indentation = indentation_at(text, start_of_line(text, elem.start))
+
+		non_space_start = next_nonspace(text, elem.start)
+		indentation = indentation_at(text, start_of_line(text, non_space_start))
 		if self.indentation is not None and self.indentation != indentation:
 			return None
 

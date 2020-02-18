@@ -102,7 +102,10 @@ class ClassBlock(Block):
 		self.getters = getters
 		self.attributes = attributes
 		self.inside_start = header.span[1]
-		self.inside_end = end-1
+		self.inside_end = end-2
+
+	def inside_content(self):
+		return self.text[self.inside_start:self.inside_end]
 
 class ClassLocator(object):
 	"""ClassLocator"""

@@ -6,7 +6,7 @@ from dart.function import NormalParameterItemElement,\
   ConstructorParameterItemParser, ConstructorSingleParameterListParser,\
   ConstructorParameterListParser, FunctionalParameterItemElement,\
   ParameterItemElement, ConstructorHeaderElement, ConstructorHeaderParser,\
-  FunctionHeaderParser, FunctionLocator
+  FunctionHeaderParser, FunctionLocator, FunctionModifierParser
 from dart.classes import ClassLocator
 from data import lazy_set_func, build_op_class, node_meta_data_class, code
 
@@ -317,6 +317,16 @@ class TestFunctionHeader(unittest.TestCase):
 
 class TestFunctionLocator(unittest.TestCase):
 	"""docstring for TestFunctionLocator"""
+	def test_function_modifier(self):
+		text="""
+@override
+@deprecated
+void f() {
+}
+"""
+		parser = FunctionModifierParser()
+		elem = parser.parse(text, 0)
+		self.assertEqual(elem.content(), "@override\n@deprecated")
 
 	def test_function_locator(self):
 		locator = ClassLocator()
@@ -332,10 +342,40 @@ class TestFunctionLocator(unittest.TestCase):
 		self.assertEqual(function_block.content()[-15:], "return meta;\n}\n")
 
 		locator = FunctionLocator(outer_indentation="  ")
+
 		function_blocks = locator.locate_all(code, class_blocks[0].inside_start, class_blocks[0].inside_end)
 		self.assertEqual(function_blocks[0].name.content(), "defaultStyles")
+		self.assertEqual(function_blocks[0].parameter_list.content(), "NodeMetadata meta, dom.Element e")
+		self.assertEqual(function_blocks[0].inside_content(), "\n      _defaultStyles != null ? _defaultStyles(meta, e) : null")
+		self.assertEqual(function_blocks[0].content()[-31:], "_defaultStyles(meta, e) : null;")
+		self.assertEqual(function_blocks[1].name.content(), "onChild")
+		self.assertEqual(function_blocks[1].parameter_list.content(), "NodeMetadata meta, dom.Element e")
+		self.assertEqual(function_blocks[1].inside_content(), "\n      _onChild != null ? _onChild(meta, e) : meta")
+		self.assertEqual(function_blocks[2].name.content(), "onPieces")
+		self.assertEqual(function_blocks[2].parameter_list.content(), "NodeMetadata meta,\n    Iterable<BuiltPiece> pieces,")
+		self.assertEqual(function_blocks[2].inside_content(), "\n      _onPieces != null ? _onPieces(meta, pieces) : pieces")
 		self.assertEqual(len(function_blocks), 4)
 
+		function_blocks = locator.locate_all(code, class_blocks[1].inside_start, class_blocks[1].inside_end)
+		self.assertEqual(len(function_blocks), 0)
+
+		function_blocks = locator.locate_all(code, class_blocks[6].inside_start, class_blocks[6].inside_end)
+		self.assertEqual(function_blocks[0].name.content(), "copyWith")
+		self.assertEqual(function_blocks[0].parameter_list.content(), "{\n    CssLength bottom,\n    CssLength left,\n    CssLength right,\n    CssLength top,\n  }")
+		self.assertEqual(function_blocks[0].inside_content(), "\n      CssMargin()\n        ..bottom = bottom ?? this.bottom\n        ..left = left ?? this.left\n        ..right = right ?? this.right\n        ..top = top ?? this.top")
+		self.assertEqual(len(function_blocks), 1)
+
+		function_blocks = locator.locate_all(code, class_blocks[7].inside_start, class_blocks[7].inside_end)
+		self.assertEqual(function_blocks[0].name.content(), "getValue")
+		self.assertEqual(function_blocks[0].parameter_list.content(), "BuilderContext bc, TextStyleBuilders tsb")
+		self.assertEqual(function_blocks[0].inside_content()[-16:], "return value;\n  ")
+		self.assertEqual(len(function_blocks), 1)
+
+		function_blocks = locator.locate_all(code, class_blocks[8].inside_start, class_blocks[8].inside_end)
+		self.assertEqual(function_blocks[0].name.content(), "styles")
+		self.assertEqual(function_blocks[0].parameter_list.content(), "void f(String key, String value)")
+		self.assertEqual(function_blocks[0].inside_content()[-34:], "f(key, iterator.current);\n    }\n  ")
+		self.assertEqual(len(function_blocks), 1)
 
 
 if __name__ == '__main__':
