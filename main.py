@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 from dartsharp import DartSharpTranspiler
 import argparse, sys
 

@@ -87,7 +87,6 @@ optional arguments:
 
 ## TODO
 
-- Move constructor initializers into bodies
 - Recognize class variables
 - Replace `this.` parameters in constructor header with type name
 - Replace all function bodies by curly braces
