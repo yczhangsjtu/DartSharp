@@ -42,6 +42,9 @@ class WordDotElement(BasicElement):
 class StringElement(BasicElement):
 	pass
 
+class SpacePlainElement(BasicElement):
+	pass
+
 class NumberElement(BasicElement):
 	"""NumberElement"""
 	def __init__(self, text, start, end, int_part, frac_part=None, span=None):
@@ -81,6 +84,34 @@ class JoinElement(BasicElement):
 		if self.elements is None:
 			return None
 		return self.elements[key]
+
+class OneOrMoreElement(BasicElement):
+	"""OneOrMoreElement"""
+	def __init__(self, text, start, end, span, elements):
+		super(OneOrMoreElement, self).__init__(text, start, end, span)
+		self.elements = elements
+
+	def __len__(self):
+		if self.elements is None:
+			return 0
+		return len(self.elements)
+
+	def __getitem__(self, key):
+		if self.elements is None:
+			return None
+		return self.elements[key]
+
+	def valid_elements(self):
+		if self.elements is None:
+			return None
+		return [e for e in self.elements if e is not None]
+
+	def valid_count(self):
+		return len(self.valid_elements())
+
+	def invalid_count(self):
+		return len([e for e in self.elements if e is None])
+
 
 class ListElement(JoinElement):
 	"""ListElement"""

@@ -4,7 +4,7 @@ from eregex.parser import BasicParser, WordParser,\
 	PlainParser, SpacePlainParser, SpaceParser,\
 	JoinParser, OrParser, StringParser, NumberParser,\
 	BoolParser, ListParser, TypeNameParser, EmptyParser,\
-	OptionalParser, WordDotParser
+	OptionalParser, WordDotParser, OneOrMoreParser
 
 from eregex.test.data import text
 
@@ -217,6 +217,12 @@ class TestCompositeParser(unittest.TestCase):
 
 		elem = parser.parse(text, pos + 8)
 		self.assertEqual(elem, None)
+
+	def test_one_or_more_parser(self):
+		parser = OneOrMoreParser([SpacePlainParser("final"), TypeNameParser()])
+
+		elem = parser.parse("final a = 0;", 0)
+		self.assertEqual(elem.content(), "final a")
 
 	def test_optional_parser(self):
 		parser = OptionalParser(SpacePlainParser("Hello"))

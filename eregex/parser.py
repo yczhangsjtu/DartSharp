@@ -2,7 +2,7 @@ import re
 from eregex.element import BasicElement, WordElement,\
 	StringElement, NumberElement, BoolElement,\
 	JoinElement, ListElement, TypeNameElement,\
-	WordDotElement
+	WordDotElement, OneOrMoreElement, SpacePlainElement
 
 class BasicParser:
 
@@ -129,7 +129,7 @@ class SpacePlainParser(object):
 		if text[curr:curr+len(self.pattern)] != self.pattern:
 			return None
 
-		return BasicElement(text, curr, curr + len(self.pattern), (pos, curr + len(self.pattern)))
+		return SpacePlainElement(text, curr, curr + len(self.pattern), (pos, curr + len(self.pattern)))
 
 class SpaceParser(object):
 	"""SpaceParser"""
@@ -181,6 +181,30 @@ class OrParser(object):
 				return elem
 
 		return None
+
+class OneOrMoreParser(object):
+	def __init__(self, parsers):
+		super(OneOrMoreParser, self).__init__()
+		self.parsers = parsers
+
+	def parse(self, text, pos):
+		if self.parsers is None or len(self.parsers) == 0:
+			return None
+
+		elements, curr, count, start, end = [], pos, 0, None, None
+		for parser in self.parsers:
+			elem = parser.parse(text, curr)
+			elements.append(elem)
+			if elem is not None:
+				count += 1
+				curr = elem.span[1]
+				end = elem.end
+				if start is None:
+					start = elem.start
+
+		if count == 0:
+			return None
+		return OneOrMoreElement(text, start, end, (pos, curr), elements)
 
 class OptionalParser(object):
 	"""Optional parser wraps a given parser so that it doesn't

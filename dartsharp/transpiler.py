@@ -47,7 +47,6 @@ class DartSharpTranspiler(object):
 
 		if class_block.constructors is not None:
 			for constructor in class_block.constructors:
-				replacer.error_messages.append(constructor.header.content())
 				replacer.update((constructor.start, constructor.end, self.transpile_constructor(constructor)))
 
 		self.error_messages.extend(replacer.error_messages)

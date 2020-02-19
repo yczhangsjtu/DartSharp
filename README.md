@@ -89,11 +89,13 @@ optional arguments:
 
 - Recognize class variables
 - Replace `this.` parameters in constructor header with type name
-- Replace all function bodies by curly braces
+- Recognize generic functions
 - Recognize setters and getters
 - Recognize `@required` function parameters
 - Replace all `final` variable declarations inside function
 - Move all global functions and variables into static class
 - Recognize function typedef and replace function typedefs into delegates
 - Remove imports
+- Recognize dart style list
+- Replace all double dots syntax
 - Allow additional replacing rules for specific libraries instead of the language
