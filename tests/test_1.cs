@@ -359,7 +359,7 @@ public class WidgetBit : TextBit {
   final TextBlock block;
   final WidgetSpan widgetSpan;
 
-  public WidgetBit(block, widgetSpan)
+  WidgetBit(this.block, @required this.widgetSpan)
       : assert(block != null),
         assert(widgetSpan != null);
 

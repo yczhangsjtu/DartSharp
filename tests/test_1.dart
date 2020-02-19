@@ -363,7 +363,7 @@ class WidgetBit extends TextBit {
   final TextBlock block;
   final WidgetSpan widgetSpan;
 
-  WidgetBit(this.block, this.widgetSpan)
+  WidgetBit(this.block, @required this.widgetSpan)
       : assert(block != null),
         assert(widgetSpan != null);
 
