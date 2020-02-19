@@ -60,6 +60,31 @@ With the help of the above defined `Replacer`, the transpiler works as follows:
 
 Then everything is done. Except the detail of how to perform transpilation on each "top level" thing. This is solved by applying the above procedure recursively on each block.
 
+## Current State
+
+This transpiler is able to work now!
+The functionalities are being improved little by little.
+
+Since it is not quite useful by now, `setup.py` is not provided.
+To try this tool, simply clone this repository, set the `PYTHONPATH` to include the path to this repository in your file system.
+Then
+
+```bash
+$ cd DartSharp
+$ python main.py --help
+
+usage: main.py [-h] [-o OUTPUT] [input_file]
+
+positional arguments:
+  input_file            Path to the input file (default stdin)
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -o OUTPUT, --output OUTPUT
+                        Path to the output file (default stdout)
+
+```
+
 ## TODO
 
 - Move constructor initializers into bodies
@@ -71,3 +96,5 @@ Then everything is done. Except the detail of how to perform transpilation on ea
 - Replace all `final` variable declarations inside function
 - Move all global functions and variables into static class
 - Recognize function typedef and replace function typedefs into delegates
+- Remove imports
+- Allow additional replacing rules for specific libraries instead of the language

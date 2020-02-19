@@ -3,8 +3,8 @@ import argparse, sys
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
-	parser.add_argument("input_file", help="Path to the input file", nargs='?')
-	parser.add_argument("-o", "--output", help="Path to the output file")
+	parser.add_argument("input_file", help="Path to the input file (default stdin)", nargs='?')
+	parser.add_argument("-o", "--output", help="Path to the output file (default stdout)")
 	args = parser.parse_args()
 
 	if args.input_file is not None:
