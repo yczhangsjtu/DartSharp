@@ -81,9 +81,7 @@ class VariableSimpleDeclareParser(object):
 		return VariableSimpleDeclareElement(text, elem.start, elem.end, elem.span,
 			modifier, typename, name, default_value)
 
-class VariableDeclareLocator(object):
+class VariableDeclareLocator(LineLocator):
+	"""VariableDeclareLocator"""
 	def __init__(self, indentation=""):
-		self.locator = LineLocator(VariableSimpleDeclareParser(), indentation=indentation)
-
-	def locate_all(self):
-		pass
+		super(VariableDeclareLocator, self).__init__(VariableSimpleDeclareParser(), indentation=indentation)

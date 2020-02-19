@@ -1,6 +1,7 @@
 import unittest
-from dart.variable import VariableSimpleDeclareParser
+from dart.variable import VariableSimpleDeclareParser, VariableDeclareLocator
 from dart.test.data import code
+from dart.classes import ClassLocator
 
 class TestVariableDeclare(unittest.TestCase):
 	"""TestVariableDeclare"""
@@ -44,6 +45,30 @@ class TestVariableDeclare(unittest.TestCase):
 		self.assertEqual(elem.name.content(), "isBlockElement")
 		self.assertEqual(elem.default_value.content(), "false")
 		self.assertEqual(elem.content(), "final isBlockElement = false;")
+
+	def test_variable_locator(self):
+		locator = ClassLocator()
+		class_blocks = locator.locate_all(code)
+		self.assertEqual(len(class_blocks), 15)
+
+		locator = VariableDeclareLocator(indentation="  ")
+		variable_declares = locator.locate_all(code, class_blocks[0].inside_start, class_blocks[0].inside_end)
+		self.assertEqual(len(variable_declares), 6)
+		self.assertEqual(variable_declares[0].modifier.content(), "final")
+		self.assertEqual(variable_declares[0].typename.content(), "bool")
+		self.assertEqual(variable_declares[0].name.content(), "isBlockElement")
+		self.assertEqual(variable_declares[2].modifier.content(), "final")
+		self.assertEqual(variable_declares[2].typename.content(), "BuildOpDefaultStyles")
+		self.assertEqual(variable_declares[2].name.content(), "_defaultStyles")
+
+		variable_declares = locator.locate_all(code, class_blocks[3].inside_start, class_blocks[3].inside_end)
+		self.assertEqual(len(variable_declares), 2)
+		self.assertEqual(variable_declares[0].modifier.content(), "final")
+		self.assertEqual(variable_declares[0].typename.content(), "TextBlock")
+		self.assertEqual(variable_declares[0].name.content(), "block")
+		self.assertEqual(variable_declares[1].modifier.content(), "final")
+		self.assertEqual(variable_declares[1].typename.content(), "Iterable<Widget>")
+		self.assertEqual(variable_declares[1].name.content(), "widgets")
 
 if __name__ == '__main__':
 	unittest.main()
