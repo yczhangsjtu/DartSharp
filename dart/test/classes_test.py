@@ -119,6 +119,14 @@ class TestClassLocator(unittest.TestCase):
 		self.assertEqual(constructor_block.initializer_content()[0:31], " _defaultStyles = defaultStyles")
 		self.assertEqual(constructor_block.initializer_content()[-22:], "_onWidgets = onWidgets")
 		self.assertEqual(constructor_block.braced_content(), None)
+		variable_declares = class_blocks[0].attributes
+		self.assertEqual(len(variable_declares), 6)
+		self.assertEqual(variable_declares[0].modifier.content(), "final")
+		self.assertEqual(variable_declares[0].typename.content(), "bool")
+		self.assertEqual(variable_declares[0].name.content(), "isBlockElement")
+		self.assertEqual(variable_declares[2].modifier.content(), "final")
+		self.assertEqual(variable_declares[2].typename.content(), "BuildOpDefaultStyles")
+		self.assertEqual(variable_declares[2].name.content(), "_defaultStyles")
 
 		self.assertEqual(class_blocks[1].name.content(), "BuilderContext")
 		self.assertEqual(class_blocks[1].with_mixes, None)
@@ -143,6 +151,14 @@ class TestClassLocator(unittest.TestCase):
 		self.assertEqual(class_blocks[3].extends.content(), "BuiltPiece")
 		self.assertFalse(class_blocks[3].is_abstract)
 		self.assertEqual(class_blocks[3].content()[-19:], "widgets != null;\n}\n")
+		variable_declares = class_blocks[3].attributes
+		self.assertEqual(len(variable_declares), 2)
+		self.assertEqual(variable_declares[0].modifier.content(), "final")
+		self.assertEqual(variable_declares[0].typename.content(), "TextBlock")
+		self.assertEqual(variable_declares[0].name.content(), "block")
+		self.assertEqual(variable_declares[1].modifier.content(), "final")
+		self.assertEqual(variable_declares[1].typename.content(), "Iterable<Widget>")
+		self.assertEqual(variable_declares[1].name.content(), "widgets")
 
 		self.assertEqual(class_blocks[6].name.content(), "CssMargin")
 		self.assertFalse(class_blocks[6].is_abstract)
