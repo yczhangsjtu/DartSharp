@@ -63,9 +63,9 @@ Then everything is done. Except the detail of how to perform transpilation on ea
 ## Current State
 
 This transpiler is able to work now!
-The functionalities are being improved little by little.
+New functionalities will be added little by little.
 
-Since it is not quite useful by now, `setup.py` is not provided.
+Since it is not quite useful with the currently supported functionalities, `setup.py` is not provided.
 To try this tool, simply clone this repository, set the `PYTHONPATH` to include the path to this repository in your file system.
 Then
 
