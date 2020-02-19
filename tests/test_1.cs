@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:html/dom.dart' as dom;
 
-public NodeMetadata lazySet(NodeMetadata meta,
+public NodeMetadata lazySet(NodeMetadata meta, 
   BuildOp buildOp = null,
   Color color = null,
   bool decoOver = false,
@@ -94,14 +94,14 @@ public class BuildOp {
   final BuildOpOnPieces _onPieces;
   final BuildOpOnWidgets _onWidgets;
 
-  BuildOp({
-    BuildOpDefaultStyles defaultStyles,
-    bool isBlockElement,
-    BuildOpOnChild onChild,
-    BuildOpOnPieces onPieces,
-    BuildOpOnWidgets onWidgets,
+  public BuildOp(
+    BuildOpDefaultStyles defaultStyles = null,
+    bool isBlockElement = false,
+    BuildOpOnChild onChild = null,
+    BuildOpOnPieces onPieces = null,
+    BuildOpOnWidgets onWidgets = null,
     this.priority = 10,
-  })  : _defaultStyles = defaultStyles,
+  )  : _defaultStyles = defaultStyles,
         this.isBlockElement = isBlockElement ?? onWidgets != null,
         _onChild = onChild,
         _onPieces = onPieces,
@@ -139,7 +139,7 @@ public class BuilderContext {
   final BuildContext context;
   final Widget origin;
 
-  BuilderContext(this.context, this.origin);
+  public BuilderContext(context, origin);
 }
 
 public abstract class BuiltPiece {
@@ -153,10 +153,10 @@ public class BuiltPieceSimple : BuiltPiece {
   final TextBlock block;
   final Iterable<Widget> widgets;
 
-  BuiltPieceSimple({
-    this.block,
-    this.widgets,
-  }) : assert((block == null) != (widgets == null));
+  public BuiltPieceSimple(
+    block = null,
+    widgets = null,
+  ) : assert((block == null) != (widgets == null));
 
   bool get hasWidgets => widgets != null;
 }
@@ -205,10 +205,9 @@ public class CssLength {
   final double number;
   final CssLengthUnit unit;
 
-  CssLength(
-    this.number, {
+  public CssLength(number, 
     this.unit = CssLengthUnit.px,
-  })  : assert(!number.isNegative),
+  )  : assert(!number.isNegative),
         assert(unit != null);
 
   bool get isNotEmpty => number > 0;
@@ -325,7 +324,7 @@ public class DataBit : TextBit {
   final VoidCallback onTap;
   final TextStyleBuilders tsb;
 
-  DataBit(this.block, this.data, this.tsb, {this.onTap})
+  public DataBit(block, data, tsb, onTap = null)
       : assert(block != null),
         assert(data != null),
         assert(tsb != null);
@@ -347,7 +346,7 @@ public class SpaceBit : TextBit {
   final TextBlock block;
   String _data;
 
-  SpaceBit(this.block, {String data})
+  public SpaceBit(block, String data = null)
       : assert(block != null),
         _data = data;
 
@@ -360,7 +359,7 @@ public class WidgetBit : TextBit {
   final TextBlock block;
   final WidgetSpan widgetSpan;
 
-  WidgetBit(this.block, this.widgetSpan)
+  public WidgetBit(block, widgetSpan)
       : assert(block != null),
         assert(widgetSpan != null);
 
@@ -384,7 +383,7 @@ public class TextBlock : TextBit {
   final TextStyleBuilders tsb;
   final _children = <TextBit>[];
 
-  TextBlock(this.tsb, {this.parent}) : assert(tsb != null);
+  public TextBlock(tsb, parent = null) : assert(tsb != null);
 
   @override
   TextBlock get block => parent;
@@ -443,7 +442,7 @@ public class TextBlock : TextBit {
     return parent.next;
   }
 
-  public void addBit(TextBit bit,int index = 0) =>
+  public void addBit(TextBit bit, int index = 0) =>
       _children.insert(index ?? _children.length, bit);
 
   
@@ -465,7 +464,7 @@ public class TextBlock : TextBit {
 
   public void addWidget(WidgetSpan ws) => addBit(WidgetBit(this, ws));
 
-  public bool forEachBit(void f,bool reversed = false) {
+  public bool forEachBit(void f, bool reversed = false) {
     final l = _children.length;
     final i0 = reversed ? l - 1 : 0;
     final i1 = reversed ? -1 : l;
@@ -540,7 +539,7 @@ public class TextStyleBuilders {
 
   set textAlign(TextAlign v) => _textAlign = v;
 
-  TextStyleBuilders({this.parent});
+  public TextStyleBuilders(parent = null);
 
   void enqueue<T>(TextStyleBuilder<T> builder, T input) {
     assert(_output == null, "Cannot add builder after being built");

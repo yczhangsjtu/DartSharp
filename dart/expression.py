@@ -1,6 +1,6 @@
 from eregex.element import BasicElement
 from eregex.parser import StringParser, BoolParser,\
-	NumberParser, WordParser, OrParser
+	NumberParser, OrParser, WordDotParser
 
 
 class SimpleExpressionElement(BasicElement):
@@ -17,7 +17,7 @@ class SimpleExpressionParser(object):
 			StringParser(),
 			BoolParser(),
 			NumberParser(),
-			WordParser(),
+			WordDotParser(),
 		])
 
 	def parse(self, text, pos):

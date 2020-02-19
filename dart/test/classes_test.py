@@ -112,6 +112,13 @@ class TestClassLocator(unittest.TestCase):
 		self.assertEqual(function_blocks[2].parameter_list.content(), "NodeMetadata meta,\n    Iterable<BuiltPiece> pieces,")
 		self.assertEqual(function_blocks[2].inside_content(), "\n      _onPieces != null ? _onPieces(meta, pieces) : pieces")
 		self.assertEqual(len(function_blocks), 4)
+		constructor_blocks = class_blocks[0].constructors
+		self.assertEqual(len(constructor_blocks), 1)
+		constructor_block = constructor_blocks[0]
+		self.assertEqual(constructor_block.name.content(), "BuildOp")
+		self.assertEqual(constructor_block.initializer_content()[0:31], " _defaultStyles = defaultStyles")
+		self.assertEqual(constructor_block.initializer_content()[-22:], "_onWidgets = onWidgets")
+		self.assertEqual(constructor_block.braced_content(), None)
 
 		self.assertEqual(class_blocks[1].name.content(), "BuilderContext")
 		self.assertEqual(class_blocks[1].with_mixes, None)
@@ -119,6 +126,13 @@ class TestClassLocator(unittest.TestCase):
 		self.assertEqual(class_blocks[1].content()[-16:], "this.origin);\n}\n")
 		self.assertEqual(class_blocks[1].inside_content()[-14:], "this.origin);\n")
 		self.assertEqual(class_blocks[1].functions, None)
+		constructor_blocks = class_blocks[1].constructors
+		self.assertEqual(len(constructor_blocks), 1)
+		constructor_block = constructor_blocks[0]
+		self.assertEqual(constructor_block.name.content(), "BuilderContext")
+		self.assertEqual(constructor_block.initializer_content(), None)
+		self.assertEqual(constructor_block.braced_content(), None)
+		self.assertEqual(constructor_block.content(), "\n  BuilderContext(this.context, this.origin);")
 
 		self.assertEqual(class_blocks[2].name.content(), "BuiltPiece")
 		self.assertEqual(class_blocks[2].extends, None)

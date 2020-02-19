@@ -46,6 +46,7 @@ class DartSharpTranspiler(object):
 
 		if class_block.constructors is not None:
 			for constructor in class_block.constructors:
+				replacer.error_messages.append(constructor.header.content())
 				replacer.update((constructor.start, constructor.end, self.transpile_constructor(constructor)))
 
 		self.error_messages.extend(replacer.error_messages)
@@ -86,6 +87,7 @@ class DartSharpTranspiler(object):
 
 	def transpile_constructor(self, constructor):
 		replacer = Replacer(constructor.text, constructor.start, constructor.end)
+		replacer.update((constructor.header.start, constructor.header.end, self.transpile_constructor_header(constructor.header)))
 		self.error_messages.extend(replacer.error_messages)
 		return replacer.digest()
 
@@ -103,33 +105,41 @@ class DartSharpTranspiler(object):
 		name_parts.append(header.name.content())
 		return "%s(%s)" % (" ".join(name_parts), self.transpile_parameter_list(header.parameter_list))
 
-	def transpile_parameter_list(self, parameter_list):
+	def transpile_constructor_header(self, header):
+		replacer = Replacer(header.text, header.start, header.end)
+		name_parts = []
+		if not header.name.content().startswith("_"):
+			name_parts.append("public")
+		name_parts.append(header.name.content())
+		return "%s(%s)" % (" ".join(name_parts), self.transpile_parameter_list(header.parameter_list, header.name))
+
+	def transpile_parameter_list(self, parameter_list, class_name=None):
 		lists = []
 		if parameter_list.positioned is not None:
-			lists.append(self.transpile_positioned_parameter_list(parameter_list.positioned))
+			lists.append(self.transpile_positioned_parameter_list(parameter_list.positioned, class_name))
 		if parameter_list.named is not None:
-			lists.append(self.transpile_named_parameter_list(parameter_list.named))
-		return ",".join(lists)
+			lists.append(self.transpile_named_parameter_list(parameter_list.named, class_name))
+		return ", ".join(lists)
 
-	def transpile_positioned_parameter_list(self, parameter_list):
+	def transpile_positioned_parameter_list(self, parameter_list, class_name=None):
 		replacer = Replacer(parameter_list.text, parameter_list.start, parameter_list.end)
 		items = parameter_list.elements
 		for i in range(len(items)):
 			if items[i].default_value is None:
-				replacer.update((items[i].start, items[i].end, self.transpile_parameter_item(items[i])))
+				replacer.update((items[i].start, items[i].end, self.transpile_parameter_item(items[i], class_name=class_name)))
 		self.error_messages.extend(replacer.error_messages)
 		return replacer.digest()
 
-	def transpile_named_parameter_list(self, parameter_list):
+	def transpile_named_parameter_list(self, parameter_list, class_name=None):
 		replacer = Replacer(parameter_list.text, parameter_list.start, parameter_list.end)
 		items = parameter_list.elements
 		for i in range(len(items)):
 			if items[i].default_value is None:
-				replacer.update((items[i].start, items[i].end, self.transpile_parameter_item(items[i], add_default_value=True)))
+				replacer.update((items[i].start, items[i].end, self.transpile_parameter_item(items[i], add_default_value=True, class_name=None)))
 		self.error_messages.extend(replacer.error_messages)
 		return replacer.digest()[1:-1]
 
-	def transpile_parameter_item(self, parameter_item, add_default_value=False):
+	def transpile_parameter_item(self, parameter_item, add_default_value=False, class_name=None):
 		items = []
 
 		default_value = None
