@@ -101,11 +101,13 @@ public class BuildOp {
     BuildOpOnPieces onPieces = null,
     BuildOpOnWidgets onWidgets = null,
     this.priority = 10
-  )  : _defaultStyles = defaultStyles,
+  ) {
+    _defaultStyles = defaultStyles,
         this.isBlockElement = isBlockElement ?? onWidgets != null,
         _onChild = onChild,
         _onPieces = onPieces,
         _onWidgets = onWidgets;
+  }
 
   bool get hasOnChild => _onChild != null;
 
@@ -139,7 +141,8 @@ public class BuilderContext {
   final BuildContext context;
   final Widget origin;
 
-  public BuilderContext(context, origin);
+  public BuilderContext(context, origin) {
+  }
 }
 
 public abstract class BuiltPiece {
@@ -156,7 +159,9 @@ public class BuiltPieceSimple : BuiltPiece {
   public BuiltPieceSimple(
     block = null,
     widgets = null
-  ) : assert((block == null) != (widgets == null));
+  ) {
+    assert((block == null) != (widgets == null));
+  }
 
   bool get hasWidgets => widgets != null;
 }
@@ -207,8 +212,10 @@ public class CssLength {
 
   public CssLength(number, 
     this.unit = CssLengthUnit.px
-  )  : assert(!number.isNegative),
+  ) {
+    assert(!number.isNegative),
         assert(unit != null);
+  }
 
   bool get isNotEmpty => number > 0;
 
@@ -324,10 +331,11 @@ public class DataBit : TextBit {
   final VoidCallback onTap;
   final TextStyleBuilders tsb;
 
-  public DataBit(block, data, tsb, onTap = null)
-      : assert(block != null),
+  public DataBit(block, data, tsb, onTap = null) {
+    assert(block != null),
         assert(data != null),
         assert(tsb != null);
+  }
 
   public DataBit rebuild(
     String data = null,
@@ -346,9 +354,10 @@ public class SpaceBit : TextBit {
   final TextBlock block;
   String _data;
 
-  public SpaceBit(block, String data = null)
-      : assert(block != null),
+  public SpaceBit(block, String data = null) {
+    assert(block != null),
         _data = data;
+  }
 
   bool get hasTrailingSpace => data == null;
 
@@ -383,7 +392,9 @@ public class TextBlock : TextBit {
   final TextStyleBuilders tsb;
   final _children = <TextBit>[];
 
-  public TextBlock(tsb, parent = null) : assert(tsb != null);
+  public TextBlock(tsb, parent = null) {
+    assert(tsb != null);
+  }
 
   @override
   TextBlock get block => parent;
@@ -539,7 +550,8 @@ public class TextStyleBuilders {
 
   set textAlign(TextAlign v) => _textAlign = v;
 
-  public TextStyleBuilders(parent = null);
+  public TextStyleBuilders(parent = null) {
+  }
 
   void enqueue<T>(TextStyleBuilder<T> builder, T input) {
     assert(_output == null, "Cannot add builder after being built");

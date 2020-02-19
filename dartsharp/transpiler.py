@@ -11,6 +11,7 @@ class DartSharpTranspiler(object):
 		self.class_locator = ClassLocator(inner_indentation=indent)
 		self.function_locator = FunctionLocator(inner_indentation=indent)
 		self.double_to_float = double_to_float
+		self.indent = indent
 		self.reset()
 
 	def reset(self):
@@ -88,6 +89,14 @@ class DartSharpTranspiler(object):
 	def transpile_constructor(self, constructor):
 		replacer = Replacer(constructor.text, constructor.start, constructor.end)
 		replacer.update((constructor.header.start, constructor.header.end, self.transpile_constructor_header(constructor.header)))
+		body_start, body_end = constructor.header.end, constructor.end
+		body_parts = [" {"]
+		if constructor.initializer_content() is not None:
+			body_parts.append("%s%s%s;" % (constructor.indentation, self.indent, constructor.initializer_content().strip()))
+		if constructor.braced_content() is not None:
+			body_parts.append(constructor.braced_content())
+		body_parts.append("%s}" % constructor.indentation)
+		replacer.update((body_start, body_end, "\n".join(body_parts)))
 		self.error_messages.extend(replacer.error_messages)
 		return replacer.digest()
 

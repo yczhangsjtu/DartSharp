@@ -68,3 +68,6 @@ Then everything is done. Except the detail of how to perform transpilation on ea
 - Replace all function bodies by curly braces
 - Recognize setters and getters
 - Recognize `@required` function parameters
+- Replace all `final` variable declarations inside function
+- Move all global functions and variables into static class
+- Recognize function typedef and replace function typedefs into delegates
