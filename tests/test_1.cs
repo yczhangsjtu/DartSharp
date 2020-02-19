@@ -17,7 +17,7 @@ public NodeMetadata lazySet(NodeMetadata meta,
   bool isNotRenderable = false,
   Iterable<BuildOp> parentOps = null,
   Iterable<String> styles = null,
-  Iterable<String> stylesPrepend = null,
+  Iterable<String> stylesPrepend = null
 ) {
   meta ??= NodeMetadata();
 
@@ -100,7 +100,7 @@ public class BuildOp {
     BuildOpOnChild onChild = null,
     BuildOpOnPieces onPieces = null,
     BuildOpOnWidgets onWidgets = null,
-    this.priority = 10,
+    this.priority = 10
   )  : _defaultStyles = defaultStyles,
         this.isBlockElement = isBlockElement ?? onWidgets != null,
         _onChild = onChild,
@@ -116,7 +116,7 @@ public class BuildOp {
       _onChild != null ? _onChild(meta, e) : meta;
 
   public Iterable<BuiltPiece> onPieces(NodeMetadata meta,
-    Iterable<BuiltPiece> pieces,) =>
+    Iterable<BuiltPiece> pieces) =>
       _onPieces != null ? _onPieces(meta, pieces) : pieces;
 
   public Iterable<Widget> onWidgets(NodeMetadata meta, Iterable<Widget> widgets) =>
@@ -155,7 +155,7 @@ public class BuiltPieceSimple : BuiltPiece {
 
   public BuiltPieceSimple(
     block = null,
-    widgets = null,
+    widgets = null
   ) : assert((block == null) != (widgets == null));
 
   bool get hasWidgets => widgets != null;
@@ -192,7 +192,7 @@ public class CssMargin {
     CssLength bottom = null,
     CssLength left = null,
     CssLength right = null,
-    CssLength top = null,
+    CssLength top = null
   ) =>
       CssMargin()
         ..bottom = bottom ?? this.bottom
@@ -206,7 +206,7 @@ public class CssLength {
   final CssLengthUnit unit;
 
   public CssLength(number, 
-    this.unit = CssLengthUnit.px,
+    this.unit = CssLengthUnit.px
   )  : assert(!number.isNegative),
         assert(unit != null);
 
@@ -332,7 +332,7 @@ public class DataBit : TextBit {
   public DataBit rebuild(
     String data = null,
     VoidCallback onTap = null,
-    TextStyleBuilders tsb = null,
+    TextStyleBuilders tsb = null
   ) =>
       DataBit(
         block,
@@ -366,7 +366,7 @@ public class WidgetBit : TextBit {
   public WidgetBit rebuild(
     PlaceholderAlignment alignment = null,
     TextBaseline baseline = null,
-    Widget child = null,
+    Widget child = null
   ) =>
       WidgetBit(
         block,

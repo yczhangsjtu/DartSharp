@@ -119,7 +119,11 @@ class DartSharpTranspiler(object):
 			lists.append(self.transpile_positioned_parameter_list(parameter_list.positioned, class_name))
 		if parameter_list.named is not None:
 			lists.append(self.transpile_named_parameter_list(parameter_list.named, class_name))
-		return ", ".join(lists)
+		result = ", ".join(lists)
+		if result.strip().endswith(","):
+			index = result.rfind(",")
+			result = result[:index] + result[index+1:]
+		return result
 
 	def transpile_positioned_parameter_list(self, parameter_list, class_name=None):
 		replacer = Replacer(parameter_list.text, parameter_list.start, parameter_list.end)
