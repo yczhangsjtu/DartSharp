@@ -1,25 +1,24 @@
 import 'package:flutter/widgets.dart';
 import 'package:html/dom.dart' as dom;
 
-NodeMetadata lazySet(
-  NodeMetadata meta, {
-  BuildOp buildOp,
-  Color color,
-  bool decoOver,
-  bool decoStrike,
-  bool decoUnder,
-  TextDecorationStyle decorationStyle,
-  CssBorderStyle decorationStyleFromCssBorderStyle,
-  String fontFamily,
-  String fontSize,
-  bool fontStyleItalic,
-  FontWeight fontWeight,
-  bool isBlockElement,
-  bool isNotRenderable,
-  Iterable<BuildOp> parentOps,
-  Iterable<String> styles,
-  Iterable<String> stylesPrepend,
-}) {
+public NodeMetadata lazySet(NodeMetadata meta,
+  BuildOp buildOp = null,
+  Color color = null,
+  bool decoOver = false,
+  bool decoStrike = false,
+  bool decoUnder = false,
+  TextDecorationStyle decorationStyle = null,
+  CssBorderStyle decorationStyleFromCssBorderStyle = null,
+  String fontFamily = null,
+  String fontSize = null,
+  bool fontStyleItalic = false,
+  FontWeight fontWeight = null,
+  bool isBlockElement = false,
+  bool isNotRenderable = false,
+  Iterable<BuildOp> parentOps = null,
+  Iterable<String> styles = null,
+  Iterable<String> stylesPrepend = null,
+) {
   meta ??= NodeMetadata();
 
   if (buildOp != null) {
@@ -84,7 +83,7 @@ NodeMetadata lazySet(
   return meta;
 }
 
-class BuildOp {
+public class BuildOp {
   final bool isBlockElement;
 
   // op with lower priority will run first
@@ -110,19 +109,17 @@ class BuildOp {
 
   bool get hasOnChild => _onChild != null;
 
-  List<String> defaultStyles(NodeMetadata meta, dom.Element e) =>
+  public List<String> defaultStyles(NodeMetadata meta, dom.Element e) =>
       _defaultStyles != null ? _defaultStyles(meta, e) : null;
 
-  NodeMetadata onChild(NodeMetadata meta, dom.Element e) =>
+  public NodeMetadata onChild(NodeMetadata meta, dom.Element e) =>
       _onChild != null ? _onChild(meta, e) : meta;
 
-  Iterable<BuiltPiece> onPieces(
-    NodeMetadata meta,
-    Iterable<BuiltPiece> pieces,
-  ) =>
+  public Iterable<BuiltPiece> onPieces(NodeMetadata meta,
+    Iterable<BuiltPiece> pieces,) =>
       _onPieces != null ? _onPieces(meta, pieces) : pieces;
 
-  Iterable<Widget> onWidgets(NodeMetadata meta, Iterable<Widget> widgets) =>
+  public Iterable<Widget> onWidgets(NodeMetadata meta, Iterable<Widget> widgets) =>
       (_onWidgets != null ? _onWidgets(meta, widgets) : null) ?? widgets;
 }
 
@@ -138,21 +135,21 @@ typedef Iterable<BuiltPiece> BuildOpOnPieces(
 typedef Iterable<Widget> BuildOpOnWidgets(
     NodeMetadata meta, Iterable<Widget> widgets);
 
-class BuilderContext {
+public class BuilderContext {
   final BuildContext context;
   final Widget origin;
 
   BuilderContext(this.context, this.origin);
 }
 
-abstract class BuiltPiece {
+public abstract class BuiltPiece {
   bool get hasWidgets;
 
   TextBlock get block;
   Iterable<Widget> get widgets;
 }
 
-class BuiltPieceSimple extends BuiltPiece {
+public class BuiltPieceSimple : BuiltPiece {
   final TextBlock block;
   final Iterable<Widget> widgets;
 
@@ -164,7 +161,7 @@ class BuiltPieceSimple extends BuiltPiece {
   bool get hasWidgets => widgets != null;
 }
 
-class CssBorderSide {
+public class CssBorderSide {
   Color color;
   CssBorderStyle style;
   CssLength width;
@@ -172,14 +169,14 @@ class CssBorderSide {
 
 enum CssBorderStyle { dashed, dotted, double, solid }
 
-class CssBorders {
+public class CssBorders {
   CssBorderSide bottom;
   CssBorderSide left;
   CssBorderSide right;
   CssBorderSide top;
 }
 
-class CssMargin {
+public class CssMargin {
   CssLength bottom;
   CssLength left;
   CssLength right;
@@ -191,12 +188,12 @@ class CssMargin {
       right?.isNotEmpty == true ||
       top?.isNotEmpty == true;
 
-  CssMargin copyWith({
-    CssLength bottom,
-    CssLength left,
-    CssLength right,
-    CssLength top,
-  }) =>
+  public CssMargin copyWith(
+    CssLength bottom = null,
+    CssLength left = null,
+    CssLength right = null,
+    CssLength top = null,
+  ) =>
       CssMargin()
         ..bottom = bottom ?? this.bottom
         ..left = left ?? this.left
@@ -204,7 +201,7 @@ class CssMargin {
         ..top = top ?? this.top;
 }
 
-class CssLength {
+public class CssLength {
   final double number;
   final CssLengthUnit unit;
 
@@ -216,7 +213,7 @@ class CssLength {
 
   bool get isNotEmpty => number > 0;
 
-  double getValue(BuilderContext bc, TextStyleBuilders tsb) {
+  public float getValue(BuilderContext bc, TextStyleBuilders tsb) {
     double value;
 
     switch (this.unit) {
@@ -241,7 +238,7 @@ enum CssLengthUnit {
   px,
 }
 
-class NodeMetadata {
+public class NodeMetadata {
   Iterable<BuildOp> _buildOps;
   dom.Element _domElement;
   Iterable<BuildOp> _parentOps;
@@ -294,7 +291,7 @@ class NodeMetadata {
     return _buildOps?.where((o) => o.isBlockElement)?.length?.compareTo(0) == 1;
   }
 
-  void styles(void f(String key, String value)) {
+  public void styles(void f) {
     _stylesFrozen = true;
     if (_styles == null) return;
 
@@ -309,7 +306,7 @@ class NodeMetadata {
 
 typedef NodeMetadata NodeMetadataCollector(NodeMetadata meta, dom.Element e);
 
-abstract class TextBit {
+public abstract class TextBit {
   TextBlock get block;
 
   String get data => null;
@@ -322,7 +319,7 @@ abstract class TextBit {
   TextStyleBuilders get tsb => null;
 }
 
-class DataBit extends TextBit {
+public class DataBit : TextBit {
   final TextBlock block;
   final String data;
   final VoidCallback onTap;
@@ -333,11 +330,11 @@ class DataBit extends TextBit {
         assert(data != null),
         assert(tsb != null);
 
-  DataBit rebuild({
-    String data,
-    VoidCallback onTap,
-    TextStyleBuilders tsb,
-  }) =>
+  public DataBit rebuild(
+    String data = null,
+    VoidCallback onTap = null,
+    TextStyleBuilders tsb = null,
+  ) =>
       DataBit(
         block,
         data ?? this.data,
@@ -346,7 +343,7 @@ class DataBit extends TextBit {
       );
 }
 
-class SpaceBit extends TextBit {
+public class SpaceBit : TextBit {
   final TextBlock block;
   String _data;
 
@@ -359,7 +356,7 @@ class SpaceBit extends TextBit {
   String get data => _data;
 }
 
-class WidgetBit extends TextBit {
+public class WidgetBit : TextBit {
   final TextBlock block;
   final WidgetSpan widgetSpan;
 
@@ -367,11 +364,11 @@ class WidgetBit extends TextBit {
       : assert(block != null),
         assert(widgetSpan != null);
 
-  WidgetBit rebuild({
-    PlaceholderAlignment alignment,
-    TextBaseline baseline,
-    Widget child,
-  }) =>
+  public WidgetBit rebuild(
+    PlaceholderAlignment alignment = null,
+    TextBaseline baseline = null,
+    Widget child = null,
+  ) =>
       WidgetBit(
         block,
         WidgetSpan(
@@ -382,7 +379,7 @@ class WidgetBit extends TextBit {
       );
 }
 
-class TextBlock extends TextBit {
+public class TextBlock : TextBit {
   final TextBlock parent;
   final TextStyleBuilders tsb;
   final _children = <TextBit>[];
@@ -446,10 +443,11 @@ class TextBlock extends TextBit {
     return parent.next;
   }
 
-  void addBit(TextBit bit, {int index}) =>
+  public void addBit(TextBit bit,int index = 0) =>
       _children.insert(index ?? _children.length, bit);
 
-  bool addSpace([String data]) {
+  
+  public override bool addSpace(String data) {
     final prev = last;
     if (prev == null) {
       if (data == null) return false;
@@ -463,11 +461,11 @@ class TextBlock extends TextBit {
     return true;
   }
 
-  void addText(String data) => addBit(DataBit(this, data, tsb));
+  public void addText(String data) => addBit(DataBit(this, data, tsb));
 
-  void addWidget(WidgetSpan ws) => addBit(WidgetBit(this, ws));
+  public void addWidget(WidgetSpan ws) => addBit(WidgetBit(this, ws));
 
-  bool forEachBit(f(TextBit bit, int index), {bool reversed = false}) {
+  public bool forEachBit(void f,bool reversed = false) {
     final l = _children.length;
     final i0 = reversed ? l - 1 : 0;
     final i1 = reversed ? -1 : l;
@@ -484,7 +482,7 @@ class TextBlock extends TextBit {
     return true;
   }
 
-  void rebuildBits(TextBit f(TextBit bit)) {
+  public void rebuildBits(TextBit f) {
     var i = 0;
     var l = _children.length;
     while (i < l) {
@@ -498,7 +496,7 @@ class TextBlock extends TextBit {
     }
   }
 
-  TextBit removeLast() {
+  public TextBit removeLast() {
     while (true) {
       if (_children.isEmpty) return null;
 
@@ -516,18 +514,18 @@ class TextBlock extends TextBit {
     }
   }
 
-  TextBlock sub(TextStyleBuilders tsb) {
+  public TextBlock sub(TextStyleBuilders tsb) {
     final sub = TextBlock(tsb, parent: this);
     _children.add(sub);
     return sub;
   }
 
-  void trimRight() {
+  public void trimRight() {
     while (isNotEmpty && hasTrailingSpace) removeLast();
   }
 }
 
-class TextStyleBuilders {
+public class TextStyleBuilders {
   final _builders = <Function>[];
   final _inputs = [];
   final TextStyleBuilders parent;
@@ -550,7 +548,7 @@ class TextStyleBuilders {
     _inputs.add(input);
   }
 
-  TextStyle build(BuilderContext bc) {
+  public TextStyle build(BuilderContext bc) {
     _resetContextIfNeeded(bc);
     if (_output != null) return _output;
 
@@ -568,7 +566,7 @@ class TextStyleBuilders {
     return _output;
   }
 
-  TextStyleBuilders sub() => TextStyleBuilders(parent: this);
+  public TextStyleBuilders sub() => TextStyleBuilders(parent: this);
 
   void _resetContextIfNeeded(BuilderContext bc) {
     if (bc == _bc) return;
