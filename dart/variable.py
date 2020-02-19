@@ -1,6 +1,7 @@
 from eregex.element import BasicElement, SpacePlainElement
 from eregex.parser import TypeNameParser, WordParser, SpacePlainParser,\
 	OrParser, OptionalParser, JoinParser
+from eregex.locator import LineLocator
 from dart.expression import SimpleExpressionParser
 
 class VariableSimpleDeclareElement(BasicElement):
@@ -79,3 +80,10 @@ class VariableSimpleDeclareParser(object):
 
 		return VariableSimpleDeclareElement(text, elem.start, elem.end, elem.span,
 			modifier, typename, name, default_value)
+
+class VariableDeclareLocator(object):
+	def __init__(self, indentation=""):
+		self.locator = LineLocator(VariableSimpleDeclareParser(), indentation=indentation)
+
+	def locate_all(self):
+		pass

@@ -124,22 +124,17 @@ class LineLocator(object):
 		self.parser = parser
 		self.indentation = indentation
 
+	def locate(self, text, pos):
+		elem = self.parser.parse(text, pos)
+		if elem is None:
+			return None
+
+		non_space_start = next_nonspace(text, elem.start)
+		indentation = indentation_at(text, start_of_line(text, non_space_start))
+		if self.indentation is not None and self.indentation != indentation:
+			return None
+
+		return elem
+
 	def locate_all(self, text, start=0, end=-1):
-		if end < 0:
-			end = len(text)
-
-		curr, elements = start, []
-		while curr < end:
-			elem = self.parser.parse(text, curr)
-			if elem is None or (self.indentation != None and\
-					indentation_at(text, curr) != self.indentation):
-				curr = next_line_start(text, curr)
-				continue
-
-			if elem.span[1] > end:
-				break
-
-			elements.append(elem)
-			curr = next_line_start_or_here(text, elem.span[1])
-
-		return elements
+		return locate_all(self, text, start, end)
