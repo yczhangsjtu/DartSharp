@@ -84,15 +84,15 @@ public NodeMetadata lazySet(NodeMetadata meta,
 }
 
 public class BuildOp {
-  final bool isBlockElement;
+  public readonly bool isBlockElement;
 
   // op with lower priority will run first
-  final int priority;
+  public readonly int priority;
 
-  final BuildOpDefaultStyles _defaultStyles;
-  final BuildOpOnChild _onChild;
-  final BuildOpOnPieces _onPieces;
-  final BuildOpOnWidgets _onWidgets;
+  readonly BuildOpDefaultStyles _defaultStyles;
+  readonly BuildOpOnChild _onChild;
+  readonly BuildOpOnPieces _onPieces;
+  readonly BuildOpOnWidgets _onWidgets;
 
   public BuildOp(
     BuildOpDefaultStyles defaultStyles = null,
@@ -138,8 +138,8 @@ typedef Iterable<Widget> BuildOpOnWidgets(
     NodeMetadata meta, Iterable<Widget> widgets);
 
 public class BuilderContext {
-  final BuildContext context;
-  final Widget origin;
+  public readonly BuildContext context;
+  public readonly Widget origin;
 
   public BuilderContext(context, origin) {
   }
@@ -153,8 +153,8 @@ public abstract class BuiltPiece {
 }
 
 public class BuiltPieceSimple : BuiltPiece {
-  final TextBlock block;
-  final Iterable<Widget> widgets;
+  public readonly TextBlock block;
+  public readonly Iterable<Widget> widgets;
 
   public BuiltPieceSimple(
     block = null,
@@ -167,25 +167,25 @@ public class BuiltPieceSimple : BuiltPiece {
 }
 
 public class CssBorderSide {
-  Color color;
-  CssBorderStyle style;
-  CssLength width;
+  public Color color;
+  public CssBorderStyle style;
+  public CssLength width;
 }
 
 enum CssBorderStyle { dashed, dotted, double, solid }
 
 public class CssBorders {
-  CssBorderSide bottom;
-  CssBorderSide left;
-  CssBorderSide right;
-  CssBorderSide top;
+  public CssBorderSide bottom;
+  public CssBorderSide left;
+  public CssBorderSide right;
+  public CssBorderSide top;
 }
 
 public class CssMargin {
-  CssLength bottom;
-  CssLength left;
-  CssLength right;
-  CssLength top;
+  public CssLength bottom;
+  public CssLength left;
+  public CssLength right;
+  public CssLength top;
 
   bool get isNotEmpty =>
       bottom?.isNotEmpty == true ||
@@ -207,8 +207,8 @@ public class CssMargin {
 }
 
 public class CssLength {
-  final double number;
-  final CssLengthUnit unit;
+  public readonly double number;
+  public readonly CssLengthUnit unit;
 
   public CssLength(number, 
     this.unit = CssLengthUnit.px
@@ -250,17 +250,17 @@ public class NodeMetadata {
   Iterable<BuildOp> _parentOps;
   TextStyleBuilders _tsb;
 
-  Color color;
-  bool decoOver;
-  bool decoStrike;
-  bool decoUnder;
-  TextDecorationStyle decorationStyle;
-  String fontFamily;
-  String fontSize;
-  bool fontStyleItalic;
-  FontWeight fontWeight;
+  public Color color;
+  public bool decoOver;
+  public bool decoStrike;
+  public bool decoUnder;
+  public TextDecorationStyle decorationStyle;
+  public String fontFamily;
+  public String fontSize;
+  public bool fontStyleItalic;
+  public FontWeight fontWeight;
   bool _isBlockElement;
-  bool isNotRenderable;
+  public bool isNotRenderable;
   List<String> _styles;
   bool _stylesFrozen = false;
 
@@ -326,10 +326,10 @@ public abstract class TextBit {
 }
 
 public class DataBit : TextBit {
-  final TextBlock block;
-  final String data;
-  final VoidCallback onTap;
-  final TextStyleBuilders tsb;
+  public readonly TextBlock block;
+  public readonly String data;
+  public readonly VoidCallback onTap;
+  public readonly TextStyleBuilders tsb;
 
   public DataBit(block, data, tsb, onTap = null) {
     assert(block != null),
@@ -351,7 +351,7 @@ public class DataBit : TextBit {
 }
 
 public class SpaceBit : TextBit {
-  final TextBlock block;
+  public readonly TextBlock block;
   String _data;
 
   public SpaceBit(block, String data = null) {
@@ -365,8 +365,8 @@ public class SpaceBit : TextBit {
 }
 
 public class WidgetBit : TextBit {
-  final TextBlock block;
-  final WidgetSpan widgetSpan;
+  public readonly TextBlock block;
+  public readonly WidgetSpan widgetSpan;
 
   WidgetBit(this.block, @required this.widgetSpan)
       : assert(block != null),
@@ -388,8 +388,8 @@ public class WidgetBit : TextBit {
 }
 
 public class TextBlock : TextBit {
-  final TextBlock parent;
-  final TextStyleBuilders tsb;
+  public readonly TextBlock parent;
+  public readonly TextStyleBuilders tsb;
   final _children = <TextBit>[];
 
   public TextBlock(tsb, parent = null) {
@@ -538,7 +538,7 @@ public class TextBlock : TextBit {
 public class TextStyleBuilders {
   final _builders = <Function>[];
   final _inputs = [];
-  final TextStyleBuilders parent;
+  public readonly TextStyleBuilders parent;
 
   BuilderContext _bc;
   TextStyle _output;

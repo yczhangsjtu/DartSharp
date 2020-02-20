@@ -89,13 +89,17 @@ optional arguments:
 
 - Recognize class variables
 - Replace `this.` parameters in constructor header with type name
+- Recognize variable declaration inside function
 - Recognize generic functions
 - Recognize setters and getters
 - Recognize `@required` function parameters
 - Replace all `final` variable declarations inside function
 - Move all global functions and variables into static class
 - Recognize function typedef and replace function typedefs into delegates
-- Remove imports
+- Remove imports, and replace specific ones with corresponding C# library
+- Find out which libraries are required
 - Recognize dart style list
 - Replace all double dots syntax
+- Transform strings into C# style
+- Handle abstract functions
 - Allow additional replacing rules for specific libraries instead of the language

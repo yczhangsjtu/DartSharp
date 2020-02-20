@@ -1,7 +1,7 @@
 from dart.function import FunctionLocator, ConstructorLocator
 from dart.classes import ClassLocator
 from eregex.replacer import Replacer
-from eregex.element import NumberElement
+from eregex.element import NumberElement, StringElement
 
 class DartSharpTranspiler(object):
 	"""DartSharpTranspiler"""
@@ -41,6 +41,10 @@ class DartSharpTranspiler(object):
 
 		replacer.update((class_block.header.start, class_block.header.end, self.transpile_class_header(class_block.header)))
 
+		if class_block.attributes is not None:
+			for attribute in class_block.attributes:
+				replacer.update((attribute.start, attribute.end, self.transpile_attribute(attribute)))
+
 		if class_block.functions is not None:
 			for func in class_block.functions:
 				replacer.update((func.start, func.end, self.transpile_function(func)))
@@ -75,6 +79,53 @@ class DartSharpTranspiler(object):
 			words.extend(extensions)
 
 		return " ".join(words)
+
+	def transpile_attribute(self, attribute):
+		items = []
+		if not attribute.name.content().startswith("_"):
+			items.append("public")
+
+		if attribute.modifier is not None:
+			if attribute.modifier.content() == "final" or\
+				attribute.modifier.content() == "const":
+				items.append("readonly")
+
+		if attribute.typename is not None:
+			items.append(attribute.typename.content())
+		else:
+			deduced_type = self.deduce_type(attribute.default_value)
+			if deduced_type is not None:
+				items.append(deduced_type)
+			else:
+				self.error_messages.append("Cannot deduce type of %s." % attribute.default_value.content())
+
+		items.append(attribute.name.content())
+
+		if attribute.default_value is not None:
+			items.append("=")
+			items.append(attribute.default_value.content())
+
+		return "%s;" % " ".join(items)
+
+	def deduce_type(self, value):
+		if isinstance(value, NumberElement):
+			if value.frac_part is not None:
+				if self.double_to_float:
+					return "float"
+				else:
+					return "double"
+			else:
+				return "int"
+		if isinstance(value, StringElement):
+			return "string"
+
+		if value.content() == "true" or value.content() == "false":
+			return "bool"
+
+		if value.content().endswith(".length"):
+			return "int"
+
+		return "UnknownType"
 
 	def transpile_function(self, func):
 		replacer = Replacer(func.text, func.start, func.end)
