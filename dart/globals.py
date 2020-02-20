@@ -4,10 +4,14 @@ from eregex.parser import JoinParser, StringParser, SpacePlainParser, WordParser
 from eregex.locator import LineLocator
 
 class ImportElement(BasicElement):
-	def __init__(self, text, start, end, span, target, alias=None):
+	def __init__(self, text, start, end, span, target, alias=None, show=None):
 		super(ImportElement, self).__init__(text, start, end, span)
 		self.target = target
 		self.alias = alias
+		self.show = show
+
+	def package(self):
+		return self.target.inside_content()
 
 class ImportParser(object):
 	def __init__(self):
@@ -16,6 +20,7 @@ class ImportParser(object):
 			SpacePlainParser("import"),
 			StringParser(),
 			OptionalParser(JoinParser([SpacePlainParser("as"), WordParser()])),
+			OptionalParser(JoinParser([SpacePlainParser("show"), WordParser()])),
 			SpacePlainParser(";")
 		])
 
@@ -24,11 +29,15 @@ class ImportParser(object):
 		if elem is None:
 			return None
 
-		target, alias = elem[1], elem[2]
+		target, alias, show = elem[1], elem[2], elem[3]
 		if alias.content() == "":
 			alias = None
 		else:
 			alias = alias[1]
+		if show.content() == "":
+			show = None
+		else:
+			show = show[1]
 
 		return ImportElement(text, elem.start, elem.end, elem.span, target, alias)
 
@@ -61,7 +70,7 @@ class ImportLocator(LineLocator):
 	def __init__(self, indentation=""):
 		super(ImportLocator, self).__init__(ImportParser(), indentation=indentation)
 
-class PartLocator(LineLocator):
-	"""PartLocator"""
+class PartOfLocator(LineLocator):
+	"""PartOfLocator"""
 	def __init__(self, indentation=""):
-		super(PartLocator, self).__init__(PartLocator(), indentation=indentation)
+		super(PartOfLocator, self).__init__(PartOfParser(), indentation=indentation)

@@ -40,7 +40,8 @@ class WordDotElement(BasicElement):
 	pass
 
 class StringElement(BasicElement):
-	pass
+	def inside_content(self):
+		return self.content()[1:-1]
 
 class SpacePlainElement(BasicElement):
 	pass

@@ -1,29 +1,35 @@
 from dart.function import FunctionLocator, ConstructorLocator, VariableDeclareLocator
 from dart.expression import DartListElement, FunctionInvocationElement
 from dart.classes import ClassLocator
-from dart.globals import ImportLocator
+from dart.globals import ImportLocator, PartOfLocator
 from eregex.replacer import Replacer
 from eregex.element import NumberElement, StringElement
 
 class DartSharpTranspiler(object):
 	"""DartSharpTranspiler"""
-	def __init__(self, global_class_name="Utils", indent="  ", double_to_float=True):
+	def __init__(self, global_class_name="Utils", indent="  ", double_to_float=True, engines=[]):
 		super(DartSharpTranspiler, self).__init__()
 		self.global_class_name = global_class_name
 		self.import_locator = ImportLocator(indentation="")
+		self.part_of_locator = PartOfLocator(indentation="")
 		self.class_locator = ClassLocator(inner_indentation=indent)
 		self.function_locator = FunctionLocator(inner_indentation=indent)
 		self.variable_declare_locator = VariableDeclareLocator(indentation="")
 		self.double_to_float = double_to_float
 		self.indent = indent
+		self.engines = engines
 		self.reset()
 
 	def reset(self):
 		self.global_functions = {}
 		self.global_variables = {}
 		self.class_attributes = {}
-		self.needed_namespaces = []
+		self.needed_namespaces = {}
 		self.error_messages = []
+
+	def using_namespace(self, namespace):
+		if namespace is not None:
+			self.needed_namespaces[namespace] = True
 
 	def transpile_dart_code(self, code):
 		self.reset()
@@ -32,6 +38,14 @@ class DartSharpTranspiler(object):
 		imports = self.import_locator.locate_all(code)
 		for imp in imports:
 			replacer.update((imp.start, imp.end, ""))
+			for engine in self.engines:
+				namespace = engine.get_namespace(imp.target.inside_content())
+				if namespace is not None:
+					self.using_namespace(namespace)
+
+		part_ofs = self.part_of_locator.locate_all(code)
+		for part_of in part_ofs:
+			replacer.update((part_of.start, part_of.end, ""))
 
 		global_variables = self.variable_declare_locator.locate_all(code)
 		for global_variable in global_variables:
@@ -44,6 +58,9 @@ class DartSharpTranspiler(object):
 		class_blocks = self.class_locator.locate_all(code)
 		for class_block in class_blocks:
 			replacer.update((class_block.start, class_block.end, self.transpile_class(class_block)))
+
+		if len(self.needed_namespaces) > 0:
+			replacer.update((0, 0, "\n".join(map(lambda x: "using %s;" % x, self.needed_namespaces.keys()))))
 
 		self.error_messages.extend(replacer.error_messages)
 
@@ -265,12 +282,15 @@ class DartSharpTranspiler(object):
 		return " ".join(items)
 
 	def transpile_typename(self, typename):
+		if typename.content() == "String":
+			return "string"
 		return typename.content()
 
 	def transpile_expression(self, value):
 		expression = value.expression
 
 		if isinstance(expression, DartListElement):
+			self.using_namespace("System.Collections.Generic")
 			replacer = Replacer(expression.text, expression.start, expression.end)
 			if expression.typename is not None:
 				replacer.update((expression.bracket.start, expression.bracket.end, "List<%s>" % self.transpile_typename(expression.typename)))
