@@ -1,6 +1,7 @@
 from dart.function import FunctionLocator, ConstructorLocator, VariableDeclareLocator
 from dart.expression import DartListElement, FunctionInvocationElement
 from dart.classes import ClassLocator
+from dart.globals import ImportLocator
 from eregex.replacer import Replacer
 from eregex.element import NumberElement, StringElement
 
@@ -9,6 +10,7 @@ class DartSharpTranspiler(object):
 	def __init__(self, global_class_name="Utils", indent="  ", double_to_float=True):
 		super(DartSharpTranspiler, self).__init__()
 		self.global_class_name = global_class_name
+		self.import_locator = ImportLocator(indentation="")
 		self.class_locator = ClassLocator(inner_indentation=indent)
 		self.function_locator = FunctionLocator(inner_indentation=indent)
 		self.variable_declare_locator = VariableDeclareLocator(indentation="")
@@ -20,11 +22,16 @@ class DartSharpTranspiler(object):
 		self.global_functions = {}
 		self.global_variables = {}
 		self.class_attributes = {}
+		self.needed_namespaces = []
 		self.error_messages = []
 
 	def transpile_dart_code(self, code):
 		self.reset()
 		replacer = Replacer(code)
+
+		imports = self.import_locator.locate_all(code)
+		for imp in imports:
+			replacer.update((imp.start, imp.end, ""))
 
 		global_variables = self.variable_declare_locator.locate_all(code)
 		for global_variable in global_variables:
