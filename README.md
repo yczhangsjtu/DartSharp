@@ -87,6 +87,7 @@ optional arguments:
 
 ## TODO
 
+- Expand simple expression to contain function invocation and list
 - Recognize variable declaration inside function
 - Add attribute initialization inside constructor body
 - Recognize generic functions
@@ -101,4 +102,5 @@ optional arguments:
 - Replace all double dots syntax
 - Transform strings into C# style
 - Handle abstract functions
+- add `new` to invocation of constructors
 - Allow additional replacing rules for specific libraries instead of the language

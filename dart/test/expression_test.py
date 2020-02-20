@@ -1,5 +1,6 @@
 import unittest
-from dart.expression import SimpleExpressionParser
+from dart.expression import SimpleExpressionParser, FunctionInvocationParser
+from eregex.test.data import code
 
 class TestSimpleExpression(unittest.TestCase):
 	"""TestSimpleExpression"""
@@ -27,6 +28,23 @@ int d = a;
 		pos = text_with_expression.find("int d")
 		elem = parser.parse(text_with_expression, pos+7)
 		self.assertEqual(elem.content(), "a")
+
+	def test_function_invocation(self):
+		parser = FunctionInvocationParser()
+		pos = code.find("meta._styles.insertAll(0, styles)")
+		elem = parser.parse(code, pos)
+		self.assertEqual(elem.content(), "meta._styles.insertAll(0, styles)")
+		self.assertEqual(elem.name.content(), "meta._styles.insertAll")
+		self.assertEqual(elem.arguments.content(), "0, styles")
+		self.assertEqual(elem.arguments[0].content(), "0")
+		self.assertEqual(elem.arguments[1].content(), "styles")
+
+		pos = code.find("iterator.moveNext()")
+		elem = parser.parse(code, pos)
+		self.assertEqual(elem.content(), "iterator.moveNext()")
+		self.assertEqual(elem.name.content(), "iterator.moveNext")
+		self.assertEqual(elem.arguments, None)
+
 
 if __name__ == '__main__':
 	unittest.main()

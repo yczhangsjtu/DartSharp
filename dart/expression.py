@@ -1,7 +1,36 @@
 from eregex.element import BasicElement
 from eregex.parser import StringParser, BoolParser,\
-	NumberParser, OrParser, WordDotParser
+	NumberParser, OrParser, WordDotParser, JoinParser,\
+	TypeNameParser, SpacePlainParser, OptionalParser,\
+	ListParser
 
+
+class FunctionInvocationElement(BasicElement):
+	def __init__(self, text, start, end, span, name, arguments=None):
+		super(FunctionInvocationElement, self).__init__(text, start, end, span)
+		self.name = name
+		self.arguments = arguments
+
+class FunctionInvocationParser(object):
+	def __init__(self):
+		self.parser = None
+	def parse(self, text, pos):
+		if self.parser is None:
+			self.parser = JoinParser([
+				TypeNameParser(),
+				SpacePlainParser("("),
+				OptionalParser(ListParser(SimpleExpressionParser(), SpacePlainParser(","))),
+				SpacePlainParser(")")
+			])
+		elem = self.parser.parse(text, pos)
+		if elem is None:
+			return elem
+
+		func_name, arguments = elem[0], elem[2]
+		if arguments.content() == "":
+			arguments = None
+
+		return FunctionInvocationElement(text, elem.start, elem.end, elem.span, func_name, arguments)
 
 class SimpleExpressionElement(BasicElement):
 	"""SimpleExpressionElement"""
@@ -26,3 +55,4 @@ class SimpleExpressionParser(object):
 			return None
 
 		return SimpleExpressionElement(elem)
+
