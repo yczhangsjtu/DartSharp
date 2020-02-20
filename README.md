@@ -87,15 +87,16 @@ optional arguments:
 
 ## TODO
 
+- Remove imports, and replace specific ones with corresponding C# library
+- Move all global functions and variables into static class
+- Optional const before function invocation
 - Replace all `for(final...)` with `for(var...)`
 - Add attribute initialization inside constructor body
 - Recognize generic functions
 - Recognize setters and getters
 - Replace all `final` variable declarations inside function
 - For required parameters, assert they are not null in the body
-- Move all global functions and variables into static class
 - Recognize function typedef and replace function typedefs into delegates
-- Remove imports, and replace specific ones with corresponding C# library
 - Find out which libraries are required
 - Recognize dart style list
 - Replace all double dots syntax

@@ -1,4 +1,4 @@
-from dart.function import FunctionLocator, ConstructorLocator
+from dart.function import FunctionLocator, ConstructorLocator, VariableDeclareLocator
 from dart.expression import DartListElement, FunctionInvocationElement
 from dart.classes import ClassLocator
 from eregex.replacer import Replacer
@@ -11,6 +11,7 @@ class DartSharpTranspiler(object):
 		self.global_class_name = global_class_name
 		self.class_locator = ClassLocator(inner_indentation=indent)
 		self.function_locator = FunctionLocator(inner_indentation=indent)
+		self.variable_declare_locator = VariableDeclareLocator(indentation="")
 		self.double_to_float = double_to_float
 		self.indent = indent
 		self.reset()
@@ -25,13 +26,17 @@ class DartSharpTranspiler(object):
 		self.reset()
 		replacer = Replacer(code)
 
-		class_blocks = self.class_locator.locate_all(code)
-		for class_block in class_blocks:
-			replacer.update((class_block.start, class_block.end, self.transpile_class(class_block)))
+		global_variables = self.variable_declare_locator.locate_all(code)
+		for global_variable in global_variables:
+			replacer.update((global_variable.start, global_variable.end, self.transpile_variable_declare(global_variable)))
 
 		global_functions = self.function_locator.locate_all(code)
 		for func in global_functions:
 			replacer.update((func.start, func.end, self.transpile_function(func)))
+
+		class_blocks = self.class_locator.locate_all(code)
+		for class_block in class_blocks:
+			replacer.update((class_block.start, class_block.end, self.transpile_class(class_block)))
 
 		self.error_messages.extend(replacer.error_messages)
 
@@ -112,7 +117,7 @@ class DartSharpTranspiler(object):
 
 		return "%s;" % " ".join(items)
 
-	def transpile_variable_declare(self, attribute, func_name):
+	def transpile_variable_declare(self, attribute, func_name=None):
 		items = []
 
 		if attribute.modifier is not None:
