@@ -46,6 +46,13 @@ class TestVariableDeclare(unittest.TestCase):
 		self.assertEqual(elem.default_value.content(), "false")
 		self.assertEqual(elem.content(), "final isBlockElement = false;")
 
+		elem = parser.parse("final meta = collectMetadata(domNode);", 0)
+		self.assertEqual(elem.modifier.content(), "final")
+		self.assertEqual(elem.typename, None)
+		self.assertEqual(elem.name.content(), "meta")
+		self.assertEqual(elem.default_value.content(), "collectMetadata(domNode)")
+		self.assertEqual(elem.content(), "final meta = collectMetadata(domNode);")
+
 	def test_variable_locator(self):
 		locator = ClassLocator()
 		class_blocks = locator.locate_all(code)

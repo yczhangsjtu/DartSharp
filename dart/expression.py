@@ -87,11 +87,11 @@ class SimpleExpressionParser(object):
 	def __init__(self):
 		super(SimpleExpressionParser, self).__init__()
 		self.parser = OrParser([
+			FunctionInvocationParser(),
 			StringParser(),
 			BoolParser(),
 			NumberParser(),
 			WordDotParser(),
-			FunctionInvocationParser(),
 			DartListParser()
 		])
 

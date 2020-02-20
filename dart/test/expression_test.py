@@ -1,6 +1,7 @@
 import unittest
 from dart.expression import SimpleExpressionParser, FunctionInvocationParser,\
-	DartListParser
+	DartListParser, TypeNameParser, SpacePlainParser, OptionalParser, ListParser,\
+	JoinParser
 from eregex.test.data import code
 
 class TestSimpleExpression(unittest.TestCase):
@@ -30,6 +31,12 @@ int d = a;
 		elem = parser.parse(text_with_expression, pos+7)
 		self.assertEqual(elem.content(), "a")
 
+		elem = parser.parse("collectMetadata(domNode)", 0)
+		self.assertEqual(elem.content(), "collectMetadata(domNode)")
+		self.assertEqual(elem.expression.name.content(), "collectMetadata")
+		self.assertEqual(elem.expression.arguments.content(), "domNode")
+		self.assertEqual(elem.expression.arguments[0].content(), "domNode")
+
 	def test_function_invocation(self):
 		parser = FunctionInvocationParser()
 		pos = code.find("meta._styles.insertAll(0, styles)")
@@ -39,6 +46,12 @@ int d = a;
 		self.assertEqual(elem.arguments.content(), "0, styles")
 		self.assertEqual(elem.arguments[0].content(), "0")
 		self.assertEqual(elem.arguments[1].content(), "styles")
+
+		elem = parser.parse("collectMetadata(domNode)", 0)
+		self.assertEqual(elem.content(), "collectMetadata(domNode)")
+		self.assertEqual(elem.name.content(), "collectMetadata")
+		self.assertEqual(elem.arguments.content(), "domNode")
+		self.assertEqual(elem.arguments[0].content(), "domNode")
 
 		pos = code.find("iterator.moveNext()")
 		elem = parser.parse(code, pos)

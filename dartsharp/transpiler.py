@@ -1,5 +1,5 @@
 from dart.function import FunctionLocator, ConstructorLocator
-from dart.expression import DartListElement
+from dart.expression import DartListElement, FunctionInvocationElement
 from dart.classes import ClassLocator
 from eregex.replacer import Replacer
 from eregex.element import NumberElement, StringElement
@@ -97,7 +97,7 @@ class DartSharpTranspiler(object):
 		else:
 			typename = self.deduce_type(attribute.default_value)
 			if typename is None:
-				self.error_messages.append("Cannot deduce type of %s." % self.transpile_expression(attribute.default_value))
+				self.error_messages.append("Cannot deduce type of %s." % attribute.default_value.content())
 		if typename is not None:
 			items.append(typename)
 			# self.error_messages.append("Add class attribute: %s %s %s." % (class_name.name.content(), attribute.name.content(), typename))
@@ -257,6 +257,7 @@ class DartSharpTranspiler(object):
 
 	def transpile_expression(self, value):
 		expression = value.expression
+
 		if isinstance(expression, DartListElement):
 			replacer = Replacer(expression.text, expression.start, expression.end)
 			if expression.typename is not None:
@@ -272,10 +273,12 @@ class DartSharpTranspiler(object):
 					replacer.update((expression.elements[i].start, expression.elements[i].end, self.transpile_expression(expression.elements[i])))
 			self.error_messages.extend(replacer.error_messages)
 			return replacer.digest()
+
 		return expression.content()
 
 	def deduce_type(self, value):
 		expression = value.expression
+
 		if isinstance(expression, NumberElement):
 			if expression.frac_part is not None:
 				if self.double_to_float:
@@ -284,12 +287,18 @@ class DartSharpTranspiler(object):
 					return "double"
 			else:
 				return "int"
+
 		if isinstance(expression, StringElement):
 			return "string"
+
 		if isinstance(expression, DartListElement):
 			if expression.typename is not None:
 				return "List<%s>" % self.transpile_typename(expression.typename)
 			return "List"
+
+		if isinstance(expression, FunctionInvocationElement):
+			if self.is_capitalized(expression.name.content()):
+				return expression.name.content()
 
 		if expression.content() == "true" or expression.content() == "false":
 			return "bool"
@@ -298,3 +307,16 @@ class DartSharpTranspiler(object):
 			return "int"
 
 		return None
+
+	def is_capitalized(self, word):
+		if word is None or word == "":
+			return False
+
+		if ord(word[0]) >= ord("A") and ord(word[0]) <= ord("Z"):
+			return True
+
+		if word[0] == "_" and len(word) > 1:
+			if ord(word[1]) >= ord("A") and ord(word[1]) <= ord("Z"):
+				return True
+
+		return False

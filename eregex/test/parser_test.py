@@ -309,6 +309,12 @@ var list = [
 		self.assertEqual(elem[0].content(), '"First item"')
 		self.assertEqual(elem[1].content(), '"Second item"')
 
+		parser = ListParser(WordDotParser(), SpacePlainParser(","))
+		elem = parser.parse("Hello", 0)
+		self.assertEqual(len(elem), 1)
+		self.assertEqual(elem.content(), "Hello")
+		self.assertEqual(elem[0].content(), "Hello")
+
 
 	def test_nested_list(self):
 		nested_list = r"""
