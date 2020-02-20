@@ -2,7 +2,7 @@ from eregex.element import BasicElement, JoinElement, ListElement
 from eregex.parser import TypeNameParser,\
 	SpaceParser, WordParser, OrParser, BasicParser,\
 	JoinParser, SpacePlainParser, OptionalParser, ListParser,\
-	EmptyParser
+	EmptyParser, WordDotParser
 from eregex.locator import Block, BlockLocator, locate_all
 from dart.expression import SimpleExpressionParser
 from dart.variable import VariableDeclareLocator
@@ -131,8 +131,8 @@ class FunctionalParameterItemParser(object):
 		)
 
 class ParameterItemElement(BasicElement):
-	def __init__(self, element):
-		super(ParameterItemElement, self).__init__(element.text, element.start, element.end, element.span)
+	def __init__(self, text, start, end, span, element, required=False):
+		super(ParameterItemElement, self).__init__(text, start, end, span)
 		self.element = element
 		self.is_this = type(element) is ThisParameterItemElement
 		if type(element) is NormalParameterItemElement or type(element) is FunctionalParameterItemElement:
@@ -141,37 +141,54 @@ class ParameterItemElement(BasicElement):
 			self.typename = None
 		self.name = element.name
 		self.default_value = element.default_value
+		self.required = required
 
 class ConstructorParameterItemParser(object):
 	"""ConstructorParameterItemParser"""
 	def __init__(self):
 		super(ConstructorParameterItemParser, self).__init__()
-		self.parser = OrParser([
-			FunctionalParameterItemParser(),
-			NormalParameterItemParser(),
-			ThisParameterItemParser(),
+		self.parser = JoinParser([
+			OptionalParser(JoinParser([SpacePlainParser("@"), WordDotParser()])),
+			OrParser([
+				FunctionalParameterItemParser(),
+				NormalParameterItemParser(),
+				ThisParameterItemParser(),
+			])
 		])
 
 	def parse(self, text, pos):
 		elem = self.parser.parse(text, pos)
 		if elem is None:
 			return None
-		return ParameterItemElement(elem)
+		required = elem[0].content() != "" and elem[0][1].content() == "required"
+		if required:
+			start = elem[0].start
+		else:
+			start = elem[1].start
+		return ParameterItemElement(text, start, elem.end, elem.span, elem[1], required)
 
 class ParameterItemParser(object):
 	"""ParameterItemParser"""
 	def __init__(self):
-		super(ParameterItemParser, self).__init__()
-		self.parser = OrParser([
-			FunctionalParameterItemParser(),
-			NormalParameterItemParser(),
+		self.parser = JoinParser([
+			OptionalParser(JoinParser([SpacePlainParser("@"), WordDotParser()])),
+			OrParser([
+				FunctionalParameterItemParser(),
+				NormalParameterItemParser(),
+			])
 		])
 
 	def parse(self, text, pos):
 		elem = self.parser.parse(text, pos)
 		if elem is None:
 			return None
-		return ParameterItemElement(elem)
+
+		required = elem[0].content() != "" and elem[0][1].content() == "required"
+		if required:
+			start = elem[0].start
+		else:
+			start = elem[1].start
+		return ParameterItemElement(text, start, elem.end, elem.span, elem[1], required)
 
 class SingleParameterListElement(ListElement):
 	def __init__(self, text, parameters, span=None, has_trailing_comma=False, has_curly_brace=False, start=None, end=None):

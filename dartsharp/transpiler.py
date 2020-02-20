@@ -260,6 +260,8 @@ class DartSharpTranspiler(object):
 			elif typename == "bool":
 				default_value = "false"
 
+		if parameter_item.required:
+			items.append("/* @required */")
 		if typename is not None:
 			items.append(typename)
 		elif class_name is not None:

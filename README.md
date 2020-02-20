@@ -87,14 +87,12 @@ optional arguments:
 
 ## TODO
 
-- Expand simple expression to contain function invocation and list
-- Recognize variable declaration inside function
 - Replace all `for(final...)` with `for(var...)`
 - Add attribute initialization inside constructor body
 - Recognize generic functions
 - Recognize setters and getters
-- Recognize `@required` function parameters
 - Replace all `final` variable declarations inside function
+- For required parameters, assert they are not null in the body
 - Move all global functions and variables into static class
 - Recognize function typedef and replace function typedefs into delegates
 - Remove imports, and replace specific ones with corresponding C# library
