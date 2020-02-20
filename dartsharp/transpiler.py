@@ -93,7 +93,7 @@ class DartSharpTranspiler(object):
 				items.append("readonly")
 
 		if attribute.typename is not None:
-			typename = attribute.typename.content()
+			typename = self.transpile_typename(attribute.typename)
 		else:
 			typename = self.deduce_type(attribute.default_value.expression)
 			if typename is None:
@@ -120,7 +120,7 @@ class DartSharpTranspiler(object):
 				items.append("var")
 
 		if attribute.typename is not None:
-			items.append(attribute.typename.content())
+			items.append(self.transpile_typename(attribute.typename))
 		elif len(items) == 0 or items[-1] != "var":
 			items.append("var")
 
@@ -145,7 +145,7 @@ class DartSharpTranspiler(object):
 			return "string"
 		if isinstance(value, DartListElement):
 			if value.typename is not None:
-				return "List<%s>" % value.typename.content()
+				return "List<%s>" % self.transpile_typename(value.typename)
 			return "List"
 
 		if value.content() == "true" or value.content() == "false":
@@ -190,10 +190,10 @@ class DartSharpTranspiler(object):
 			name_parts.append("public")
 		if override:
 			name_parts.append("override")
-		if self.double_to_float and header.typename.content() == "double":
+		if self.double_to_float and self.transpile_typename(header.typename) == "double":
 			name_parts.append("float")
 		else:
-			name_parts.append(header.typename.content())
+			name_parts.append(self.transpile_typename(header.typename))
 		name_parts.append(header.name.content())
 		return "%s(%s)" % (" ".join(name_parts), self.transpile_parameter_list(header.parameter_list))
 
@@ -243,7 +243,7 @@ class DartSharpTranspiler(object):
 
 		typename = None
 		if parameter_item.typename is not None:
-			typename = parameter_item.typename.content()
+			typename = self.transpile_typename(parameter_item.typename)
 			if self.double_to_float and typename == "double":
 				typename = "float"
 				if default_value is not None and isinstance(parameter_item.default_value, NumberElement):
@@ -275,3 +275,6 @@ class DartSharpTranspiler(object):
 			items.append(default_value)
 
 		return " ".join(items)
+
+	def transpile_typename(self, typename):
+		return typename.content()
