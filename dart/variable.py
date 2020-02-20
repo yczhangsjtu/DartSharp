@@ -72,8 +72,7 @@ class VariableSimpleDeclareParser(object):
 		if default_value.content() == "":
 			default_value = None
 		else:
-			default_value.start = default_value[1].start
-			default_value.end = default_value[1].end
+			default_value = default_value[1]
 
 		if typename is None and default_value is None:
 			return None

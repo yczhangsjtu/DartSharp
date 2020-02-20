@@ -85,7 +85,8 @@ class SimpleExpressionParser(object):
 			BoolParser(),
 			NumberParser(),
 			WordDotParser(),
-			FunctionInvocationParser()
+			FunctionInvocationParser(),
+			DartListParser()
 		])
 
 	def parse(self, text, pos):

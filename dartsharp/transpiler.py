@@ -1,4 +1,5 @@
 from dart.function import FunctionLocator, ConstructorLocator
+from dart.expression import DartListElement
 from dart.classes import ClassLocator
 from eregex.replacer import Replacer
 from eregex.element import NumberElement, StringElement
@@ -94,7 +95,7 @@ class DartSharpTranspiler(object):
 		if attribute.typename is not None:
 			typename = attribute.typename.content()
 		else:
-			typename = self.deduce_type(attribute.default_value)
+			typename = self.deduce_type(attribute.default_value.expression)
 			if typename is None:
 				self.error_messages.append("Cannot deduce type of %s." % attribute.default_value.content())
 		if typename is not None:
@@ -142,6 +143,10 @@ class DartSharpTranspiler(object):
 				return "int"
 		if isinstance(value, StringElement):
 			return "string"
+		if isinstance(value, DartListElement):
+			if value.typename is not None:
+				return "List<%s>" % value.typename.content()
+			return "List"
 
 		if value.content() == "true" or value.content() == "false":
 			return "bool"
