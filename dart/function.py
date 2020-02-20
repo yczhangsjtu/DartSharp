@@ -313,7 +313,7 @@ class _FunctionHeaderParser(object):
 		self.parser = JoinParser([
 			TypeNameParser(),
 			SpaceParser(),
-			WordParser(),
+			TypeNameParser(),
 			SpacePlainParser("("),
 			ParameterListParser(),
 			SpacePlainParser(")"),

@@ -90,7 +90,6 @@ optional arguments:
 - Optional const before function invocation
 - Replace all `for(final...)` with `for(var...)`
 - Add attribute initialization inside constructor body
-- Recognize generic functions
 - Recognize setters and getters
 - Replace all `final` variable declarations inside function
 - For required parameters, assert they are not null in the body
@@ -100,4 +99,5 @@ optional arguments:
 - Replace all double dots syntax
 - Transform strings into C# style
 - Handle abstract functions
+- Handle static functions
 - add `new` to invocation of constructors
