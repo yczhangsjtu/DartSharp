@@ -40,8 +40,14 @@ class WordDotElement(BasicElement):
 	pass
 
 class StringElement(BasicElement):
+	def __init__(self, text, start, end, span, inside_start, inside_end, is_raw=None):
+		super(StringElement, self).__init__(text, start, end, span)
+		self.is_raw = is_raw
+		self.inside_start = inside_start
+		self.inside_end = inside_end
+
 	def inside_content(self):
-		return self.content()[1:-1]
+		return self.text[self.inside_start:self.inside_end]
 
 class SpacePlainElement(BasicElement):
 	pass

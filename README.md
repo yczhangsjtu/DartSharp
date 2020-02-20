@@ -101,4 +101,3 @@ optional arguments:
 - Transform strings into C# style
 - Handle abstract functions
 - add `new` to invocation of constructors
-- Allow additional replacing rules for specific libraries instead of the language

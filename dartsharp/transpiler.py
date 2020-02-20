@@ -71,7 +71,7 @@ class DartSharpTranspiler(object):
 
 		global_variables = self.variable_declare_locator.locate_all(code)
 		for global_variable in global_variables:
-			gv = self.transpile_variable_declare(global_variable).strip()
+			gv = self.transpile_attribute(global_variable).strip()
 			if not gv.startswith("public"):
 				gv = "public %s" % gv
 			self.global_variables[global_variable.name.content()] = gv
@@ -140,7 +140,7 @@ class DartSharpTranspiler(object):
 
 		return " ".join(words)
 
-	def transpile_attribute(self, attribute, class_name):
+	def transpile_attribute(self, attribute, class_name=None):
 		items = []
 		if not attribute.name.content().startswith("_"):
 			items.append("public")
@@ -158,8 +158,8 @@ class DartSharpTranspiler(object):
 				self.error_messages.append("Cannot deduce type of %s." % attribute.default_value.content())
 		if typename is not None:
 			items.append(typename)
-			# self.error_messages.append("Add class attribute: %s %s %s." % (class_name.name.content(), attribute.name.content(), typename))
-			self.class_attributes[class_name.name.content()][attribute.name.content()] = typename
+			if class_name is not None:
+				self.class_attributes[class_name.name.content()][attribute.name.content()] = typename
 
 		items.append(attribute.name.content())
 
@@ -362,8 +362,17 @@ class DartSharpTranspiler(object):
 			replacer = Replacer(expression.text, expression.start, expression.end)
 			if expression.name in self.global_functions:
 				replacer.update((expression.name.start, expression.name.end, self.transpile_func_name(expression.name)))
+			if expression.arguments is not None:
+				for i in range(len(expression.arguments)):
+					replacer.update((expression.arguments[i].start, expression.arguments[i].end, self.transpile_expression(expression.arguments[i])))
 			self.error_messages.extend(replacer.error_messages)
 			return replacer.digest()
+
+		if isinstance(expression, StringElement):
+			if expression.is_raw:
+				return "@\"%s\"" % expression.inside_content()
+			else:
+				return "\"%s\"" % expression.inside_content()
 
 		return expression.content()
 

@@ -235,13 +235,28 @@ class _StringParser(object):
 		while curr < len(text) and text[curr] in " \t\n\r":
 			curr += 1
 
-		if curr >= len(text) or (text[curr] != "\"" and text[curr] != "'"):
+		if curr >= len(text):
 			return None
 
-		start = curr
-		mark = text[curr]
-		slash_open = False
+		if text[curr] not in "\"'r":
+			return None
+
+		start, slash_open = curr, False
+
+		if text[curr] == "r":
+			is_raw = True
+			curr += 1
+			if curr >= len(text):
+				return None
+			if text[curr] not in "\"'":
+				return None
+			mark = text[curr]
+		else:
+			is_raw = False
+			mark = text[curr]
+
 		curr += 1
+		inside_start = curr
 
 		while curr < len(text):
 			while curr < len(text) and (slash_open or (text[curr] != "\\" and text[curr] != mark)):
@@ -255,7 +270,7 @@ class _StringParser(object):
 				slash_open = True
 
 			if text[curr] == mark:
-				return StringElement(text, start, curr+1, (pos, curr+1))
+				return StringElement(text, start, curr+1, (pos, curr+1), inside_start, curr, is_raw)
 
 			curr += 1
 
