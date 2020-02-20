@@ -17,7 +17,7 @@ class DartSharpTranspiler(object):
 	def reset(self):
 		self.global_functions = {}
 		self.global_variables = {}
-		self.class_variables = {}
+		self.class_attributes = {}
 		self.error_messages = []
 
 	def transpile_dart_code(self, code):
@@ -41,9 +41,10 @@ class DartSharpTranspiler(object):
 
 		replacer.update((class_block.header.start, class_block.header.end, self.transpile_class_header(class_block.header)))
 
+		self.class_attributes[class_block.name.name.content()] = {}
 		if class_block.attributes is not None:
 			for attribute in class_block.attributes:
-				replacer.update((attribute.start, attribute.end, self.transpile_attribute(attribute)))
+				replacer.update((attribute.start, attribute.end, self.transpile_attribute(attribute, class_block.name)))
 
 		if class_block.functions is not None:
 			for func in class_block.functions:
@@ -80,7 +81,7 @@ class DartSharpTranspiler(object):
 
 		return " ".join(words)
 
-	def transpile_attribute(self, attribute):
+	def transpile_attribute(self, attribute, class_name):
 		items = []
 		if not attribute.name.content().startswith("_"):
 			items.append("public")
@@ -91,15 +92,18 @@ class DartSharpTranspiler(object):
 				items.append("readonly")
 
 		if attribute.typename is not None:
-			items.append(attribute.typename.content())
+			typename = attribute.typename.content()
 		else:
-			deduced_type = self.deduce_type(attribute.default_value)
-			if deduced_type is not None:
-				items.append(deduced_type)
-			else:
+			typename = self.deduce_type(attribute.default_value)
+			if deduced_type is None:
 				self.error_messages.append("Cannot deduce type of %s." % attribute.default_value.content())
+		if typename is not None:
+			items.append(typename)
+			# self.error_messages.append("Add class attribute: %s %s %s." % (class_name.name.content(), attribute.name.content(), typename))
+			self.class_attributes[class_name.name.content()][attribute.name.content()] = typename
 
 		items.append(attribute.name.content())
+
 
 		if attribute.default_value is not None:
 			items.append("=")
@@ -125,7 +129,7 @@ class DartSharpTranspiler(object):
 		if value.content().endswith(".length"):
 			return "int"
 
-		return "UnknownType"
+		return None
 
 	def transpile_function(self, func):
 		replacer = Replacer(func.text, func.start, func.end)
@@ -197,8 +201,7 @@ class DartSharpTranspiler(object):
 		replacer = Replacer(parameter_list.text, parameter_list.start, parameter_list.end)
 		items = parameter_list.elements
 		for i in range(len(items)):
-			if items[i].default_value is None:
-				replacer.update((items[i].start, items[i].end, self.transpile_parameter_item(items[i], add_default_value=True, class_name=None)))
+			replacer.update((items[i].start, items[i].end, self.transpile_parameter_item(items[i], add_default_value=True, class_name=class_name)))
 		self.error_messages.extend(replacer.error_messages)
 		return replacer.digest()[1:-1]
 
@@ -228,8 +231,16 @@ class DartSharpTranspiler(object):
 			elif typename == "bool":
 				default_value = "false"
 
+		if class_name is not None and class_name.content() == "CssLength":
+			self.error_messages.append("ClassName: %s Parameter Name: %s" % (class_name.content(), parameter_item.name.content()))
+
 		if typename is not None:
 			items.append(typename)
+		elif class_name is not None:
+			if class_name.content() in self.class_attributes:
+				if parameter_item.name.content() in self.class_attributes[class_name.content()]:
+					items.append(self.class_attributes[class_name.content()][parameter_item.name.content()])
+
 		items.append(parameter_item.name.content())
 		if default_value is not None:
 			items.append("=")

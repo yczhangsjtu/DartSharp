@@ -87,8 +87,6 @@ optional arguments:
 
 ## TODO
 
-- Recognize class variables
-- Replace `this.` parameters in constructor header with type name
 - Recognize variable declaration inside function
 - Recognize generic functions
 - Recognize setters and getters

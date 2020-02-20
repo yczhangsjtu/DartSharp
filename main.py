@@ -17,6 +17,8 @@ if __name__ == '__main__':
 	transpiler = DartSharpTranspiler()
 	result = transpiler.transpile_dart_code(fin.read())
 	sys.stderr.write("\n".join(transpiler.error_messages))
+	if len(transpiler.error_messages) > 0:
+		sys.stderr.write("\n")
 
 	if args.output is not None:
 		fout = open(args.output, "w")
