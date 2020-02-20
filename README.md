@@ -88,6 +88,7 @@ optional arguments:
 ## TODO
 
 - Recognize variable declaration inside function
+- Add attribute initialization inside constructor body
 - Recognize generic functions
 - Recognize setters and getters
 - Recognize `@required` function parameters

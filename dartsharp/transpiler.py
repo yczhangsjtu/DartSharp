@@ -95,7 +95,7 @@ class DartSharpTranspiler(object):
 			typename = attribute.typename.content()
 		else:
 			typename = self.deduce_type(attribute.default_value)
-			if deduced_type is None:
+			if typename is None:
 				self.error_messages.append("Cannot deduce type of %s." % attribute.default_value.content())
 		if typename is not None:
 			items.append(typename)
@@ -104,6 +104,26 @@ class DartSharpTranspiler(object):
 
 		items.append(attribute.name.content())
 
+
+		if attribute.default_value is not None:
+			items.append("=")
+			items.append(attribute.default_value.content())
+
+		return "%s;" % " ".join(items)
+
+	def transpile_variable_declare(self, attribute, func_name):
+		items = []
+
+		if attribute.modifier is not None:
+			if attribute.modifier.content() == "var":
+				items.append("var")
+
+		if attribute.typename is not None:
+			items.append(attribute.typename.content())
+		elif len(items) == 0 or items[-1] != "var":
+			items.append("var")
+
+		items.append(attribute.name.content())
 
 		if attribute.default_value is not None:
 			items.append("=")
@@ -136,6 +156,10 @@ class DartSharpTranspiler(object):
 		replacer.update((func.header.start, func.header.end, self.transpile_funcheader(func.header, func.override)))
 		if func.modifiers is not None:
 			replacer.update((func.modifiers.start, func.modifiers.end, ""))
+
+		if func.variable_declares is not None:
+			for variable_declare in func.variable_declares:
+				replacer.update((variable_declare.start, variable_declare.end, self.transpile_variable_declare(variable_declare, func.name)))
 
 		self.error_messages.extend(replacer.error_messages)
 		return replacer.digest()
@@ -230,9 +254,6 @@ class DartSharpTranspiler(object):
 				default_value = "0.0"
 			elif typename == "bool":
 				default_value = "false"
-
-		if class_name is not None and class_name.content() == "CssLength":
-			self.error_messages.append("ClassName: %s Parameter Name: %s" % (class_name.content(), parameter_item.name.content()))
 
 		if typename is not None:
 			items.append(typename)

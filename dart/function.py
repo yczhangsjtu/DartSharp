@@ -5,6 +5,7 @@ from eregex.parser import TypeNameParser,\
 	EmptyParser
 from eregex.locator import Block, BlockLocator, locate_all
 from dart.expression import SimpleExpressionParser
+from dart.variable import VariableDeclareLocator
 
 class NormalParameterItemElement(BasicElement):
 	"""NormalParameterItemElement"""
@@ -389,7 +390,7 @@ class FunctionModifierParser(object):
 
 class FunctionBlock(Block):
 	"""FunctionBlock"""
-	def __init__(self, text, start, end, indentation, header, inside_start, inside_end, is_arrow, modifiers):
+	def __init__(self, text, start, end, indentation, header, inside_start, inside_end, is_arrow, modifiers, variable_declares=None):
 		super(FunctionBlock, self).__init__(text, start, end, indentation)
 		self.header = header
 		self.typename = header.typename
@@ -402,6 +403,7 @@ class FunctionBlock(Block):
 		self.override = False
 		if modifiers is not None:
 			self.override = self.modifiers.contains("override")
+		self.variable_declares = variable_declares
 
 	def inside_content(self):
 		return self.text[self.inside_start:self.inside_end]
@@ -417,6 +419,7 @@ class FunctionLocator(object):
 			JoinParser([FunctionModifierParser(), FunctionHeaderParser(), SpacePlainParser("=>")]),
 			endchar=";",
 			indentation=outer_indentation)
+		self.variable_declare_locator = VariableDeclareLocator(indentation=outer_indentation+inner_indentation)
 
 	def locate(self, text, pos):
 		block = self.brace_function_locator.locate(text, pos)
@@ -446,8 +449,14 @@ class FunctionLocator(object):
 		else:
 			inside_end = block.end - 2
 
+		variable_declares = None
+		if not is_arrow:
+			variable_declares = self.variable_declare_locator.locate_all(block.text, block.start, block.end)
+			if len(variable_declares) == 0:
+				variable_declares = None
+
 		return FunctionBlock(block.text, block.start, block.end, block.indentation,\
-			block.element[1], inside_start, inside_end, is_arrow, modifiers)
+			block.element[1], inside_start, inside_end, is_arrow, modifiers, variable_declares)
 
 class ConstructorBlock(Block):
 	"""ConstructorBlock"""
