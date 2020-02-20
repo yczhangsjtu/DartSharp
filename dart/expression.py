@@ -32,6 +32,44 @@ class FunctionInvocationParser(object):
 
 		return FunctionInvocationElement(text, elem.start, elem.end, elem.span, func_name, arguments)
 
+class DartListElement(BasicElement):
+	def __init__(self, text, start, end, span, typename=None, elements=None):
+		super(DartListElement, self).__init__(text, start, end, span)
+		self.typename = typename
+		self.elements = elements
+
+class DartListParser(object):
+	def __init__(self):
+		self.parser = None
+
+	def parse(self, text, pos):
+		if self.parser is None:
+			self.parser = JoinParser([
+				OptionalParser(JoinParser([SpacePlainParser("<"), TypeNameParser(), SpacePlainParser(">")])),
+				SpacePlainParser("["),
+				OptionalParser(ListParser(SimpleExpressionParser(), SpacePlainParser(","))),
+				SpacePlainParser("]")
+			])
+
+		elem = self.parser.parse(text, pos)
+		if elem is None:
+			return elem
+
+		if elem[0].content() == "":
+			typename = None
+			start = elem[1].start
+		else:
+			typename = elem[0][1]
+			start = elem.start
+
+
+		if elem[2].content() == "":
+			elements = None
+		else:
+			elements = elem[2]
+
+		return DartListElement(text, start, elem.end, elem.span, typename, elements)
+
 class SimpleExpressionElement(BasicElement):
 	"""SimpleExpressionElement"""
 	def __init__(self, element):
@@ -47,6 +85,7 @@ class SimpleExpressionParser(object):
 			BoolParser(),
 			NumberParser(),
 			WordDotParser(),
+			FunctionInvocationParser()
 		])
 
 	def parse(self, text, pos):

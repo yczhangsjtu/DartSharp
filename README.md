@@ -89,6 +89,7 @@ optional arguments:
 
 - Expand simple expression to contain function invocation and list
 - Recognize variable declaration inside function
+- Replace all `for(final...)` with `for(var...)`
 - Add attribute initialization inside constructor body
 - Recognize generic functions
 - Recognize setters and getters

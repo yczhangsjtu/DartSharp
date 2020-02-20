@@ -1,5 +1,6 @@
 import unittest
-from dart.expression import SimpleExpressionParser, FunctionInvocationParser
+from dart.expression import SimpleExpressionParser, FunctionInvocationParser,\
+	DartListParser
 from eregex.test.data import code
 
 class TestSimpleExpression(unittest.TestCase):
@@ -44,6 +45,29 @@ int d = a;
 		self.assertEqual(elem.content(), "iterator.moveNext()")
 		self.assertEqual(elem.name.content(), "iterator.moveNext")
 		self.assertEqual(elem.arguments, None)
+
+	def test_dart_list(self):
+		parser = DartListParser()
+
+		elem = parser.parse("  []", 0)
+		self.assertEqual(elem.content(), "[]")
+		self.assertEqual(elem.elements, None)
+		self.assertEqual(elem.typename, None)
+
+		elem = parser.parse(" <Widget> []", 0)
+		self.assertEqual(elem.content(), "<Widget> []")
+		self.assertEqual(elem.elements, None)
+		self.assertEqual(elem.typename.content(), "Widget")
+
+		elem = parser.parse("  [1.0, abc, \"Hello\"]", 0)
+		self.assertEqual(elem.content(), "[1.0, abc, \"Hello\"]")
+		self.assertEqual(elem.elements.content(), "1.0, abc, \"Hello\"")
+		self.assertEqual(elem.typename, None)
+
+		elem = parser.parse(" <Widget> [1.0, abc, \"Hello\"]", 0)
+		self.assertEqual(elem.content(), "<Widget> [1.0, abc, \"Hello\"]")
+		self.assertEqual(elem.elements.content(), "1.0, abc, \"Hello\"")
+		self.assertEqual(elem.typename.content(), "Widget")
 
 
 if __name__ == '__main__':
