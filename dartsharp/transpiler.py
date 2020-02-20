@@ -228,8 +228,13 @@ class DartSharpTranspiler(object):
 			name_parts.append("float")
 		else:
 			name_parts.append(self.transpile_typename(header.typename))
-		name_parts.append(header.name.content())
+		name_parts.append(self.transpile_func_name(header.name))
 		return "%s(%s)" % (" ".join(name_parts), self.transpile_parameter_list(header.parameter_list))
+
+	def transpile_func_name(self, name):
+		if name.content() in self.global_functions:
+			return "%s.%s" % (self.global_class_name, name.content())
+		return name.content()
 
 	def transpile_constructor_header(self, header):
 		replacer = Replacer(header.text, header.start, header.end)
@@ -313,12 +318,25 @@ class DartSharpTranspiler(object):
 	def transpile_typename(self, typename):
 		if typename.content() == "String":
 			return "string"
+
+		replacer = Replacer(typename.text, typename.start, typename.end)
 		for engine in self.engines:
-			namespace = engine.require_namespace(typename.content())
+			namespace = engine.require_namespace(typename.name.content())
 			if namespace is not None:
 				self.using_namespace(namespace)
+			mapped_word = engine.map_word(typename.name.content())
+			if mapped_word is not None:
+				replacer.update((typename.name.start, typename.name.end, mapped_word))
 				break
-		return typename.content()
+
+		if typename.template_types is not None:
+			for i in range(len(typename.template_types)):
+				replacer.update((typename.template_types[i].start,
+					typename.template_types[i].end,
+					self.transpile_typename(typename.template_types[i])))
+
+		self.error_messages.extend(replacer.error_messages)
+		return replacer.digest()
 
 	def transpile_expression(self, value):
 		expression = value.expression
@@ -337,6 +355,13 @@ class DartSharpTranspiler(object):
 				replacer.update((expression.close_bracket.start, expression.close_bracket.end, "}"))
 				for i in range(len(expression.elements)):
 					replacer.update((expression.elements[i].start, expression.elements[i].end, self.transpile_expression(expression.elements[i])))
+			self.error_messages.extend(replacer.error_messages)
+			return replacer.digest()
+
+		if isinstance(expression, FunctionInvocationElement):
+			replacer = Replacer(expression.text, expression.start, expression.end)
+			if expression.name in self.global_functions:
+				replacer.update((expression.name.start, expression.name.end, self.transpile_func_name(expression.name)))
 			self.error_messages.extend(replacer.error_messages)
 			return replacer.digest()
 

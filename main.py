@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 from dartsharp import DartSharpTranspiler
-from engine import flutter_to_uiwidgets
+from engine import flutter_to_uiwidgets, standard_library
 
 import argparse, sys, os
 
@@ -24,7 +24,10 @@ if __name__ == '__main__':
 		fin = sys.stdin
 		utils_class_name = "Utils"
 
-	transpiler = DartSharpTranspiler(engines=[flutter_to_uiwidgets], global_class_name=utils_class_name)
+	transpiler = DartSharpTranspiler(engines=[
+		flutter_to_uiwidgets,
+		standard_library,
+	], global_class_name=utils_class_name)
 
 	result = transpiler.transpile_dart_code(fin.read())
 	sys.stderr.write("\n".join(transpiler.error_messages))
