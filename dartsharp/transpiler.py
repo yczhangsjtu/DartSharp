@@ -31,6 +31,28 @@ class DartSharpTranspiler(object):
 		if namespace is not None:
 			self.needed_namespaces[namespace] = True
 
+	def get_namespaces(self):
+		return "\n".join(map(lambda x: "using %s;" % x, self.needed_namespaces.keys()))
+
+	def get_static_class(self):
+		parts = []
+		parts.extend(self.global_functions.values())
+		parts.extend(self.global_variables.values())
+		return "class %s {\n%s\n}" % (self.global_class_name, self.indented("\n\n".join(parts)))
+
+	def front_matter(self):
+		parts = []
+		if len(self.needed_namespaces) > 0:
+			parts.append(self.get_namespaces())
+
+		if len(self.global_functions) + len(self.global_variables) > 0:
+			parts.append(self.get_static_class())
+
+		if len(parts) > 0:
+			return "\n\n".join(parts)
+
+		return ""
+
 	def transpile_dart_code(self, code):
 		self.reset()
 		replacer = Replacer(code)
@@ -49,18 +71,25 @@ class DartSharpTranspiler(object):
 
 		global_variables = self.variable_declare_locator.locate_all(code)
 		for global_variable in global_variables:
-			replacer.update((global_variable.start, global_variable.end, self.transpile_variable_declare(global_variable)))
+			gv = self.transpile_variable_declare(global_variable).strip()
+			if not gv.startswith("public"):
+				gv = "public %s" % gv
+			self.global_variables[global_variable.name.content()] = gv
+			replacer.update((global_variable.start, global_variable.end, ""))
 
 		global_functions = self.function_locator.locate_all(code)
 		for func in global_functions:
-			replacer.update((func.start, func.end, self.transpile_function(func)))
+			gf = self.transpile_function(func).strip()
+			if not gf.startswith("public"):
+				gf = "public %s" % gf
+			self.global_functions[func.name.content()] = gf
+			replacer.update((func.start, func.end, ""))
 
 		class_blocks = self.class_locator.locate_all(code)
 		for class_block in class_blocks:
 			replacer.update((class_block.start, class_block.end, self.transpile_class(class_block)))
 
-		if len(self.needed_namespaces) > 0:
-			replacer.update((0, 0, "\n".join(map(lambda x: "using %s;" % x, self.needed_namespaces.keys()))))
+		replacer.update((0, 0, self.front_matter()))
 
 		self.error_messages.extend(replacer.error_messages)
 
@@ -284,6 +313,11 @@ class DartSharpTranspiler(object):
 	def transpile_typename(self, typename):
 		if typename.content() == "String":
 			return "string"
+		for engine in self.engines:
+			namespace = engine.require_namespace(typename.content())
+			if namespace is not None:
+				self.using_namespace(namespace)
+				break
 		return typename.content()
 
 	def transpile_expression(self, value):
@@ -352,3 +386,6 @@ class DartSharpTranspiler(object):
 				return True
 
 		return False
+
+	def indented(self, text, steps=1):
+		return "%s%s" % (self.indent, text.replace("\n", "\n%s" % self.indent * steps))

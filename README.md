@@ -87,8 +87,6 @@ optional arguments:
 
 ## TODO
 
-- Remove imports, and replace specific ones with corresponding C# library
-- Move all global functions and variables into static class
 - Optional const before function invocation
 - Replace all `for(final...)` with `for(var...)`
 - Add attribute initialization inside constructor body

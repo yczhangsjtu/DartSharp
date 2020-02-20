@@ -3,7 +3,13 @@
 from dartsharp import DartSharpTranspiler
 from engine import flutter_to_uiwidgets
 
-import argparse, sys
+import argparse, sys, os
+
+def to_camel_case(snake_str):
+	return ''.join(x.title() for x in snake_str.split('_'))
+
+def basename_without_extension(filename):
+	return os.path.basename(filename).split('.')[0]
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
@@ -13,10 +19,12 @@ if __name__ == '__main__':
 
 	if args.input_file is not None:
 		fin = open(args.input_file, "r")
+		utils_class_name = "%sUtils" % to_camel_case(basename_without_extension(args.input_file))
 	else:
 		fin = sys.stdin
+		utils_class_name = "Utils"
 
-	transpiler = DartSharpTranspiler(engines=[flutter_to_uiwidgets])
+	transpiler = DartSharpTranspiler(engines=[flutter_to_uiwidgets], global_class_name=utils_class_name)
 
 	result = transpiler.transpile_dart_code(fin.read())
 	sys.stderr.write("\n".join(transpiler.error_messages))
