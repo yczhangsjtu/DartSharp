@@ -36,20 +36,15 @@ class Replacer(object):
 	def update(self, request):
 		start, end, replacement = request
 		if not self.contains(request):
-			self.error_messages.append("Request out of scope: %s\nScope is %s-%s, request is %s-%s" %
+			self.error_messages.append("Request out of scope: %s\nScope is %s-%s, request is %s-%s\n" %
 				(	self.generate_location_message(start, end),\
 					self.get_line_col(self.start), self.get_line_col(self.end),\
 					self.get_line_col(start), self.get_line_col(end)))
 			return False
 
-		if request[0] == request[1] and start_of_line(self.text, request[0]) != request[0]:
-			self.error_messages.append("Insertion not at start of line: %s\nRequested location is %s" %
-				(self.generate_line_message(request[0]), self.get_line_col(request[0])))
-			return False
-
 		for req in self.replaces:
 			if self.conflict(req, request):
-				self.error_messages.append("Conflicting requests: %s\nand %s\n, requested scopes are %s-%s and %s-%s" %
+				self.error_messages.append("Conflicting requests: %s\nand %s\n, requested scopes are %s-%s and %s-%s\n" %
 					(self.generate_location_message(req[0], req[1]), self.generate_location_message(request[0], request[1]),\
 					self.get_line_col(req[0]), self.get_line_col(req[1]),\
 					self.get_line_col(request[0]), self.get_line_col(request[1])))

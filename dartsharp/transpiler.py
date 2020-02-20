@@ -95,9 +95,9 @@ class DartSharpTranspiler(object):
 		if attribute.typename is not None:
 			typename = self.transpile_typename(attribute.typename)
 		else:
-			typename = self.deduce_type(attribute.default_value.expression)
+			typename = self.deduce_type(attribute.default_value)
 			if typename is None:
-				self.error_messages.append("Cannot deduce type of %s." % attribute.default_value.content())
+				self.error_messages.append("Cannot deduce type of %s." % self.transpile_expression(attribute.default_value))
 		if typename is not None:
 			items.append(typename)
 			# self.error_messages.append("Add class attribute: %s %s %s." % (class_name.name.content(), attribute.name.content(), typename))
@@ -108,7 +108,7 @@ class DartSharpTranspiler(object):
 
 		if attribute.default_value is not None:
 			items.append("=")
-			items.append(attribute.default_value.content())
+			items.append(self.transpile_expression(attribute.default_value))
 
 		return "%s;" % " ".join(items)
 
@@ -128,33 +128,9 @@ class DartSharpTranspiler(object):
 
 		if attribute.default_value is not None:
 			items.append("=")
-			items.append(attribute.default_value.content())
+			items.append(self.transpile_expression(attribute.default_value))
 
 		return "%s;" % " ".join(items)
-
-	def deduce_type(self, value):
-		if isinstance(value, NumberElement):
-			if value.frac_part is not None:
-				if self.double_to_float:
-					return "float"
-				else:
-					return "double"
-			else:
-				return "int"
-		if isinstance(value, StringElement):
-			return "string"
-		if isinstance(value, DartListElement):
-			if value.typename is not None:
-				return "List<%s>" % self.transpile_typename(value.typename)
-			return "List"
-
-		if value.content() == "true" or value.content() == "false":
-			return "bool"
-
-		if value.content().endswith(".length"):
-			return "int"
-
-		return None
 
 	def transpile_function(self, func):
 		replacer = Replacer(func.text, func.start, func.end)
@@ -239,7 +215,7 @@ class DartSharpTranspiler(object):
 
 		default_value = None
 		if parameter_item.default_value is not None:
-			default_value = parameter_item.default_value.content()
+			default_value = self.transpile_expression(parameter_item.default_value)
 
 		typename = None
 		if parameter_item.typename is not None:
@@ -278,3 +254,47 @@ class DartSharpTranspiler(object):
 
 	def transpile_typename(self, typename):
 		return typename.content()
+
+	def transpile_expression(self, value):
+		expression = value.expression
+		if isinstance(expression, DartListElement):
+			replacer = Replacer(expression.text, expression.start, expression.end)
+			if expression.typename is not None:
+				replacer.update((expression.bracket.start, expression.bracket.end, "List<%s>" % self.transpile_typename(expression.typename)))
+			else:
+				replacer.update((expression.start, expression.start, "List"))
+			if expression.elements is None:
+				replacer.update((expression.open_bracket.start, expression.close_bracket.end, "()"))
+			else:
+				replacer.update((expression.open_bracket.start, expression.open_bracket.end, "{"))
+				replacer.update((expression.close_bracket.start, expression.close_bracket.end, "}"))
+				for i in range(len(expression.elements)):
+					replacer.update((expression.elements[i].start, expression.elements[i].end, self.transpile_expression(expression.elements[i])))
+			self.error_messages.extend(replacer.error_messages)
+			return replacer.digest()
+		return expression.content()
+
+	def deduce_type(self, value):
+		expression = value.expression
+		if isinstance(expression, NumberElement):
+			if expression.frac_part is not None:
+				if self.double_to_float:
+					return "float"
+				else:
+					return "double"
+			else:
+				return "int"
+		if isinstance(expression, StringElement):
+			return "string"
+		if isinstance(expression, DartListElement):
+			if expression.typename is not None:
+				return "List<%s>" % self.transpile_typename(expression.typename)
+			return "List"
+
+		if expression.content() == "true" or expression.content() == "false":
+			return "bool"
+
+		if expression.content().endswith(".length"):
+			return "int"
+
+		return None

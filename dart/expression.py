@@ -33,10 +33,14 @@ class FunctionInvocationParser(object):
 		return FunctionInvocationElement(text, elem.start, elem.end, elem.span, func_name, arguments)
 
 class DartListElement(BasicElement):
-	def __init__(self, text, start, end, span, typename=None, elements=None):
+	def __init__(self, text, start, end, span, typename=None, elements=None,
+			bracket=None, open_bracket=None, close_bracket=None):
 		super(DartListElement, self).__init__(text, start, end, span)
 		self.typename = typename
 		self.elements = elements
+		self.bracket = bracket
+		self.open_bracket = open_bracket
+		self.close_bracket = close_bracket
 
 class DartListParser(object):
 	def __init__(self):
@@ -56,19 +60,21 @@ class DartListParser(object):
 			return elem
 
 		if elem[0].content() == "":
-			typename = None
+			typename, bracket = None, None
 			start = elem[1].start
 		else:
 			typename = elem[0][1]
 			start = elem.start
+			bracket = elem[0]
 
+		open_bracket, close_bracket = elem[1], elem[3]
 
 		if elem[2].content() == "":
 			elements = None
 		else:
 			elements = elem[2]
 
-		return DartListElement(text, start, elem.end, elem.span, typename, elements)
+		return DartListElement(text, start, elem.end, elem.span, typename, elements, bracket, open_bracket, close_bracket)
 
 class SimpleExpressionElement(BasicElement):
 	"""SimpleExpressionElement"""
