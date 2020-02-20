@@ -38,7 +38,7 @@ class DartSharpTranspiler(object):
 		parts = []
 		parts.extend(self.global_functions.values())
 		parts.extend(self.global_variables.values())
-		return "class %s {\n%s\n}" % (self.global_class_name, self.indented("\n\n".join(parts)))
+		return "static class %s {\n%s\n}" % (self.global_class_name, self.indented("\n\n".join(parts)))
 
 	def front_matter(self):
 		parts = []
@@ -73,7 +73,9 @@ class DartSharpTranspiler(object):
 		for global_variable in global_variables:
 			gv = self.transpile_attribute(global_variable).strip()
 			if not gv.startswith("public"):
-				gv = "public %s" % gv
+				gv = "public static %s" % gv
+			else:
+				gv = "public static%s" % gv[6:]
 			self.global_variables[global_variable.name.content()] = gv
 			replacer.update((global_variable.start, global_variable.end, ""))
 
@@ -82,6 +84,8 @@ class DartSharpTranspiler(object):
 			gf = self.transpile_function(func).strip()
 			if not gf.startswith("public"):
 				gf = "public %s" % gf
+			else:
+				gf = "public static%s" % gf[6:]
 			self.global_functions[func.name.content()] = gf
 			replacer.update((func.start, func.end, ""))
 
