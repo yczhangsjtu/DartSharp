@@ -87,7 +87,6 @@ optional arguments:
 
 ## TODO
 
-- Support named parameter for function invocation
 - Replace all `for(final...)` with `for(var...)`
 - Add attribute initialization inside constructor body
 - Recognize setters and getters

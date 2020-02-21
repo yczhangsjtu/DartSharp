@@ -2,7 +2,7 @@ from eregex.element import BasicElement
 from eregex.parser import StringParser, BoolParser,\
 	NumberParser, OrParser, WordDotParser, JoinParser,\
 	TypeNameParser, SpacePlainParser, OptionalParser,\
-	ListParser, EmptyParser
+	ListParser, EmptyParser, WordParser
 
 def is_capitalized(word):
 	if word is None or word == "":
@@ -17,6 +17,32 @@ def is_capitalized(word):
 
 	return False
 
+class ArgumentElement(BasicElement):
+	def __init__(self, text, start, end, span, value, name=None):
+		super(ArgumentElement, self).__init__(text, start, end, span)
+		self.value = value
+		self.name = name
+
+class ArgumentParser(object):
+	"""ArgumentParser"""
+	def __init__(self):
+		super(ArgumentParser, self).__init__()
+		self.parser = JoinParser([
+			OptionalParser(JoinParser([WordParser(), SpacePlainParser(":")])),
+			SimpleExpressionParser()])
+
+	def parse(self, text, pos):
+		elem = self.parser.parse(text, pos)
+		if elem is None:
+			return None
+
+		name, value = elem[0], elem[1]
+		if name.content() == "":
+			name, start = None, value.start
+		else:
+			name, start = name[0], elem.start
+
+		return ArgumentElement(text, start, elem.end, elem.span, value, name)
 
 class FunctionInvocationElement(BasicElement):
 	def __init__(self, text, start, end, span, name, arguments=None, modifier=None):
@@ -46,7 +72,7 @@ class FunctionInvocationParser(object):
 				OrParser([SpacePlainParser("const"), SpacePlainParser("new"), EmptyParser()]),
 				TypeNameParser(),
 				SpacePlainParser("("),
-				OptionalParser(ListParser(SimpleExpressionParser(), SpacePlainParser(","))),
+				OptionalParser(ListParser(ArgumentParser(), SpacePlainParser(","))),
 				SpacePlainParser(")")
 			])
 		elem = self.parser.parse(text, pos)

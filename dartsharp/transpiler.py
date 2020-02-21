@@ -83,7 +83,7 @@ class DartSharpTranspiler(object):
 		for func in global_functions:
 			gf = self.transpile_function(func).strip()
 			if not gf.startswith("public"):
-				gf = "public %s" % gf
+				gf = "public static %s" % gf
 			else:
 				gf = "public static%s" % gf[6:]
 			self.global_functions[func.name.content()] = gf
@@ -368,7 +368,7 @@ class DartSharpTranspiler(object):
 				replacer.update((expression.name.start, expression.name.end, self.transpile_func_name(expression.name)))
 			if expression.arguments is not None:
 				for i in range(len(expression.arguments)):
-					replacer.update((expression.arguments[i].start, expression.arguments[i].end, self.transpile_expression(expression.arguments[i])))
+					replacer.update((expression.arguments[i].value.start, expression.arguments[i].value.end, self.transpile_expression(expression.arguments[i].value)))
 			if expression.modifier is not None:
 				if expression.modifier.content() == "const":
 					if is_capitalized(expression.pure_name()):
