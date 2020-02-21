@@ -87,17 +87,13 @@ optional arguments:
 
 ## TODO
 
-- Add attribute initialization inside constructor body
 - Recognize setters and getters
-- Replace all `final` variable declarations inside function
-- For required parameters, assert they are not null in the body
-- Recognize function typedef and replace function typedefs into delegates
-- Find out which libraries are required
-- Recognize dart style list
+- Recognize function typedef and replace function typedefs with delegates
 - Replace all double dots syntax
-- Transform strings into C# style
+- Transform interpolated strings into C# style
 - Handle abstract functions
 - Handle static functions
-- add `new` to invocation of constructors
 - Implement `if` and `while` block
 - Replace all `for(final...)` with `for(var...)`
+- Replace `for in` with `foreach in`
+- Replace all `final` variable declarations inside function

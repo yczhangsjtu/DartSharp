@@ -1,6 +1,6 @@
 from dart.function import FunctionLocator, ConstructorLocator, VariableDeclareLocator
 from dart.expression import DartListElement, FunctionInvocationElement, is_capitalized
-from dart.classes import ClassLocator
+from dart.classes import ClassLocator, GetterLocator
 from dart.globals import ImportLocator, PartOfLocator
 from eregex.replacer import Replacer
 from eregex.element import NumberElement, StringElement
@@ -35,7 +35,7 @@ class DartSharpTranspiler(object):
   def get_namespaces(self):
     return "\n".join(map(lambda x: "using %s;" % x, self.needed_namespaces.keys()))
 
-  def get_static_class(self):
+  def get_static_util_class(self):
     parts = []
     parts.extend(self.global_functions.values())
     parts.extend(self.global_variables.values())
@@ -47,7 +47,7 @@ class DartSharpTranspiler(object):
       parts.append(self.get_namespaces())
 
     if len(self.global_functions) + len(self.global_variables) > 0:
-      parts.append(self.get_static_class())
+      parts.append(self.get_static_util_class())
 
     if len(parts) > 0:
       return "\n\n".join(parts)
@@ -125,6 +125,10 @@ class DartSharpTranspiler(object):
     if class_block.functions is not None:
       for func in class_block.functions:
         replacer.update((func.start, func.end, self.transpile_function(func)))
+
+    if class_block.getters is not None:
+      for getter in class_block.getters:
+        replacer.update((getter.start, getter.end, self.transpile_getter(getter)))
 
     if class_block.constructors is not None:
       for constructor in class_block.constructors:
@@ -223,6 +227,37 @@ class DartSharpTranspiler(object):
 
     self.error_messages.extend(replacer.error_messages)
     return replacer.digest()
+
+  def transpile_getter(self, getter):
+    header_parts = []
+
+    if not getter.name.content().startswith("_"):
+      header_parts.append("public")
+
+    if getter.override:
+      header_parts.append("override")
+
+    header_parts.append(self.transpile_typename(getter.typename))
+    header_parts.append(getter.name.content())
+
+    header = " ".join(header_parts)
+    if getter.is_arrow:
+      body = "return %s;" % getter.inside_content()
+    else:
+      body = getter.inside_content()
+
+    return "\n%s%s {\n%s%sget {\n%s%s%s\n%s%s}\n%s}" % (
+      getter.indentation,
+      header,
+      getter.indentation,
+      self.indent,
+      getter.indentation,
+      self.indent * 2,
+      body,
+      getter.indentation,
+      self.indent,
+      getter.indentation
+    )
 
   def transpile_constructor(self, constructor):
     replacer = Replacer(constructor.text, constructor.start, constructor.end)

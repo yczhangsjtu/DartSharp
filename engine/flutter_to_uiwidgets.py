@@ -16,6 +16,7 @@ class FlutterToUIWidgetsEngine(object):
 			"TextStyle" : "Unity.UIWidgets.painting",
 			"TextSpan": "Unity.UIWidgets.paiting",
 			"GestureRecognizer": "Unity.UIWidgets.gestures",
+			"Color": "Unity.UIWidgets.ui",
 		}
 		self.word_map = {
 		}
