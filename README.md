@@ -87,7 +87,6 @@ optional arguments:
 
 ## TODO
 
-- Replace all `for(final...)` with `for(var...)`
 - Add attribute initialization inside constructor body
 - Recognize setters and getters
 - Replace all `final` variable declarations inside function
@@ -100,3 +99,4 @@ optional arguments:
 - Handle abstract functions
 - Handle static functions
 - add `new` to invocation of constructors
+- Replace all `for(final...)` with `for(var...)`

@@ -78,12 +78,12 @@ class Replacer(object):
 		if end == start_of_line(self.text, end):
 			end_lineno -= 1
 		if end_lineno > start_lineno + 1:
-			return "line [%d-%d]\n%s...%s" % (start_lineno, end_lineno,\
-				self.generate_line_message(start_lineno), self.generate_line_message(end_lineno))
+			return "line [%d-%d]\n%s       ...\n%s" % (start_lineno, end_lineno,\
+				self.generate_line_message(start), self.generate_line_message(end))
 		if end_lineno > start_lineno:
 			return "line [%d-%d]\n%s%s" % (start_lineno, end_lineno,\
-				self.generate_line_message(start_lineno), self.generate_line_message(end_lineno))
-		return "line %d\n%s" % (start_lineno, self.generate_line_message(start_lineno))
+				self.generate_line_message(start), self.generate_line_message(end))
+		return "line %d\n%s" % (start_lineno, self.generate_line_message(start))
 
 	def contains(self, request):
 		return self.start <= request[0] and self.end >= request[1]

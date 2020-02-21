@@ -1,8 +1,9 @@
-from eregex.element import BasicElement
+from eregex.element import BasicElement, JoinElement
 from eregex.parser import StringParser, BoolParser,\
 	NumberParser, OrParser, WordDotParser, JoinParser,\
 	TypeNameParser, SpacePlainParser, OptionalParser,\
 	ListParser, EmptyParser, WordParser
+from eregex.locator import Block, BlockLocator, locate_all
 
 def is_capitalized(word):
 	if word is None or word == "":
@@ -162,3 +163,92 @@ class SimpleExpressionParser(object):
 
 		return SimpleExpressionElement(elem)
 
+class ForInHeaderElement(BasicElement):
+	"""ForInHeaderElement"""
+	def __init__(self, text, start, end, span, typename, variable, collection):
+		super(ForInHeaderElement, self).__init__(text, start, end, span)
+		self.typename = typename
+		self.variable = variable
+		self.collection = collection
+
+class ForInHeaderParser(object):
+	def __init__(self):
+		super(ForInHeaderParser, self).__init__()
+		self.parser = JoinParser([
+			SpacePlainParser("for"),
+			SpacePlainParser("("),
+			TypeNameParser(),
+			WordParser(),
+			SpacePlainParser("in"),
+			SimpleExpressionParser(),
+			SpacePlainParser(")")
+		])
+
+	def parse(self,text, pos):
+		elem = self.parser.parse(text, pos)
+		if elem is None:
+			return None
+
+		return ForInHeaderElement(text, elem.start, elem.end, elem.span, elem[2], elem[3], elem[5])
+
+class ForInBlock(Block):
+	"""ForInBlock"""
+	def __init__(self, text, start, end, indentation, header, inside_start, inside_end, for_in_blocks):
+		super(ForInBlock, self).__init__(text, start, end, indentation)
+		self.header = header
+		self.typename = header.typename
+		self.variable = header.variable
+		self.collection = header.collection
+		self.for_in_blocks = for_in_blocks
+
+class ForInLocator(object):
+	"""ForInLocator"""
+	def __init__(self, outer_indentation="", inner_indentation="  "):
+		super(ForInLocator, self).__init__()
+		self.brace_locator = BlockLocator(
+			JoinParser([ForInHeaderParser(), SpacePlainParser("{")]),
+			indentation=outer_indentation)
+		self.no_brace_locator = BlockLocator(ForInHeaderParser(),
+			endchar=";",
+			indentation=outer_indentation)
+		self.inner_indentation = inner_indentation
+		self.outer_indentation = outer_indentation
+
+	def locate(self, text, pos):
+		block = self.brace_locator.locate(text, pos)
+
+		if block is None:
+			block = self.no_brace_locator.locate(text, pos)
+
+		if block is None:
+			return None
+
+		return self.create_for_in_block(block)
+
+	def locate_with_indentation(self, text, pos):
+		locator = ForInLocator(outer_indentation=self.inner_indentation+self.outer_indentation, inner_indentation=self.inner_indentation)
+		return locator.locate(text, pos)
+
+	def locate_all(self, text, start=0, end=-1):
+		return locate_all(self, text, start, end)
+
+	def locate_all_with_indentation(self, text, start=0, end=-1):
+		locator = ForInLocator(outer_indentation=self.inner_indentation+self.outer_indentation, inner_indentation=self.inner_indentation)
+		return locator.locate_all(text, start, end)
+
+	def create_for_in_block(self, block):
+		if isinstance(block.element, JoinElement):
+			header = block.element[0]
+		else:
+			header = block.element
+
+		inside_start = block.element.span[1]
+		if block.element.content().endswith("{"):
+			inside_end = block.end - 2
+		else:
+			inside_end = block.end - 1
+
+		for_in_blocks = self.locate_all_with_indentation(block.text, inside_start, inside_end)
+
+		return ForInBlock(block.text, block.start, block.end, block.indentation,
+			header, inside_start, inside_end, for_in_blocks=for_in_blocks)

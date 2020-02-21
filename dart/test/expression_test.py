@@ -1,7 +1,7 @@
 import unittest
 from dart.expression import SimpleExpressionParser, FunctionInvocationParser,\
 	DartListParser, TypeNameParser, SpacePlainParser, OptionalParser, ListParser,\
-	JoinParser
+	JoinParser, ForInHeaderParser, ForInLocator
 from eregex.test.data import code
 
 class TestSimpleExpression(unittest.TestCase):
@@ -81,6 +81,25 @@ int d = a;
 		self.assertEqual(elem.content(), "<Widget> [1.0, abc, \"Hello\"]")
 		self.assertEqual(elem.elements.content(), "1.0, abc, \"Hello\"")
 		self.assertEqual(elem.typename.content(), "Widget")
+
+	def test_for_in_header(self):
+		parser = ForInHeaderParser()
+
+		elem = parser.parse("for (var i in list)", 0)
+		self.assertEqual(elem.content(), "for (var i in list)")
+		self.assertEqual(elem.typename.content(), "var")
+		self.assertEqual(elem.variable.content(), "i")
+		self.assertEqual(elem.collection.content(), "list")
+
+	def test_for_in_block(self):
+		locator = ForInLocator(outer_indentation="    ")
+
+		blocks = locator.locate_all(code)
+		self.assertEqual(len(blocks), 2)
+		self.assertEqual(blocks[0].header.content(), "for (final child in _children)")
+		self.assertEqual(blocks[1].header.content(), "for (final child in _children)")
+
+
 
 
 if __name__ == '__main__':

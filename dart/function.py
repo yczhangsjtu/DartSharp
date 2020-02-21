@@ -4,7 +4,7 @@ from eregex.parser import TypeNameParser,\
 	JoinParser, SpacePlainParser, OptionalParser, ListParser,\
 	EmptyParser, WordDotParser
 from eregex.locator import Block, BlockLocator, locate_all
-from dart.expression import SimpleExpressionParser
+from dart.expression import SimpleExpressionParser, ForInLocator
 from dart.variable import VariableDeclareLocator
 
 class NormalParameterItemElement(BasicElement):
@@ -407,7 +407,8 @@ class FunctionModifierParser(object):
 
 class FunctionBlock(Block):
 	"""FunctionBlock"""
-	def __init__(self, text, start, end, indentation, header, inside_start, inside_end, is_arrow, modifiers, variable_declares=None):
+	def __init__(self, text, start, end, indentation, header, inside_start, inside_end, is_arrow, modifiers,
+			variable_declares=None, for_in_blocks=None):
 		super(FunctionBlock, self).__init__(text, start, end, indentation)
 		self.header = header
 		self.typename = header.typename
@@ -421,6 +422,7 @@ class FunctionBlock(Block):
 		if modifiers is not None:
 			self.override = self.modifiers.contains("override")
 		self.variable_declares = variable_declares
+		self.for_in_blocks = for_in_blocks
 
 	def inside_content(self):
 		return self.text[self.inside_start:self.inside_end]
@@ -437,6 +439,7 @@ class FunctionLocator(object):
 			endchar=";",
 			indentation=outer_indentation)
 		self.variable_declare_locator = VariableDeclareLocator(indentation=outer_indentation+inner_indentation)
+		self.for_in_locator = ForInLocator(outer_indentation=outer_indentation+inner_indentation, inner_indentation=inner_indentation)
 
 	def locate(self, text, pos):
 		block = self.brace_function_locator.locate(text, pos)
@@ -472,8 +475,15 @@ class FunctionLocator(object):
 			if len(variable_declares) == 0:
 				variable_declares = None
 
+		for_in_blocks = None
+		if not is_arrow:
+			for_in_blocks = self.for_in_locator.locate_all(block.text, block.start, block.end)
+			if len(for_in_blocks) == 0:
+				for_in_blocks = None
+
 		return FunctionBlock(block.text, block.start, block.end, block.indentation,\
-			block.element[1], inside_start, inside_end, is_arrow, modifiers, variable_declares)
+			block.element[1], inside_start, inside_end, is_arrow, modifiers,\
+			variable_declares, for_in_blocks)
 
 class ConstructorBlock(Block):
 	"""ConstructorBlock"""

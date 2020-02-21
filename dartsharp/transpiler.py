@@ -204,6 +204,10 @@ class DartSharpTranspiler(object):
 			for variable_declare in func.variable_declares:
 				replacer.update((variable_declare.start, variable_declare.end, self.transpile_variable_declare(variable_declare, func.name)))
 
+		if func.for_in_blocks is not None:
+			for for_in_block in func.for_in_blocks:
+				replacer.update((for_in_block.start, for_in_block.end, self.transpile_for_in_block(for_in_block)))
+
 		self.error_messages.extend(replacer.error_messages)
 		return replacer.digest()
 
@@ -318,6 +322,16 @@ class DartSharpTranspiler(object):
 			items.append(default_value)
 
 		return " ".join(items)
+
+	def transpile_for_in_block(self, for_in_block):
+		replacer = Replacer(for_in_block.text, for_in_block.start, for_in_block.end)
+		if for_in_block.typename.content() == "final":
+			replacer.update((for_in_block.typename.start, for_in_block.typename.end, "var"))
+		if for_in_block.for_in_blocks is not None:
+			for subblock in for_in_block.for_in_blocks:
+				replacer.update((subblock.start, subblock.end, self.transpile_for_in_block(subblock)))
+		self.error_messages.extend(replacer.error_messages)
+		return replacer.digest()
 
 	def transpile_typename(self, typename):
 		if typename.content() == "String":
