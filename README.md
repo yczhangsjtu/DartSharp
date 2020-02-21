@@ -99,4 +99,5 @@ optional arguments:
 - Handle abstract functions
 - Handle static functions
 - add `new` to invocation of constructors
+- Implement `if` and `while` block
 - Replace all `for(final...)` with `for(var...)`
