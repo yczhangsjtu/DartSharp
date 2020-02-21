@@ -2,14 +2,40 @@ from eregex.element import BasicElement
 from eregex.parser import StringParser, BoolParser,\
 	NumberParser, OrParser, WordDotParser, JoinParser,\
 	TypeNameParser, SpacePlainParser, OptionalParser,\
-	ListParser
+	ListParser, EmptyParser
+
+def is_capitalized(word):
+	if word is None or word == "":
+		return False
+
+	if ord(word[0]) >= ord("A") and ord(word[0]) <= ord("Z"):
+		return True
+
+	if word[0] == "_" and len(word) > 1:
+		if ord(word[1]) >= ord("A") and ord(word[1]) <= ord("Z"):
+			return True
+
+	return False
 
 
 class FunctionInvocationElement(BasicElement):
-	def __init__(self, text, start, end, span, name, arguments=None):
+	def __init__(self, text, start, end, span, name, arguments=None, modifier=None):
 		super(FunctionInvocationElement, self).__init__(text, start, end, span)
 		self.name = name
 		self.arguments = arguments
+		self.modifier = modifier
+
+	def name_without_template(self):
+		return self.name.name.content()
+
+	def pure_name(self):
+		return self.name_without_template().split(".")[-1]
+
+	def possible_class_name(self):
+		parts = self.name_without_template().split(".")
+		if len(parts) > 1 and is_capitalized(parts[-2]):
+			return ".".join(parts[:-1])
+		return None
 
 class FunctionInvocationParser(object):
 	def __init__(self):
@@ -17,6 +43,7 @@ class FunctionInvocationParser(object):
 	def parse(self, text, pos):
 		if self.parser is None:
 			self.parser = JoinParser([
+				OrParser([SpacePlainParser("const"), SpacePlainParser("new"), EmptyParser()]),
 				TypeNameParser(),
 				SpacePlainParser("("),
 				OptionalParser(ListParser(SimpleExpressionParser(), SpacePlainParser(","))),
@@ -26,11 +53,18 @@ class FunctionInvocationParser(object):
 		if elem is None:
 			return elem
 
-		func_name, arguments = elem[0], elem[2]
+		modifier, func_name, arguments = elem[0], elem[1], elem[3]
+
+		if modifier.content() == "":
+			start = func_name.start
+			modifier = None
+		else:
+			start = elem.start
+
 		if arguments.content() == "":
 			arguments = None
 
-		return FunctionInvocationElement(text, elem.start, elem.end, elem.span, func_name, arguments)
+		return FunctionInvocationElement(text, elem.start, elem.end, elem.span, func_name, arguments, modifier)
 
 class DartListElement(BasicElement):
 	def __init__(self, text, start, end, span, typename=None, elements=None,

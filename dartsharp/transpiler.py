@@ -1,5 +1,5 @@
 from dart.function import FunctionLocator, ConstructorLocator, VariableDeclareLocator
-from dart.expression import DartListElement, FunctionInvocationElement
+from dart.expression import DartListElement, FunctionInvocationElement, is_capitalized
 from dart.classes import ClassLocator
 from dart.globals import ImportLocator, PartOfLocator
 from eregex.replacer import Replacer
@@ -369,6 +369,15 @@ class DartSharpTranspiler(object):
 			if expression.arguments is not None:
 				for i in range(len(expression.arguments)):
 					replacer.update((expression.arguments[i].start, expression.arguments[i].end, self.transpile_expression(expression.arguments[i])))
+			if expression.modifier is not None:
+				if expression.modifier.content() == "const":
+					if is_capitalized(expression.pure_name()):
+						replacer.update((expression.modifier.start, expression.modifier.end, "new"))
+					else:
+						replacer.update((expression.modifier.start, expression.modifier.end, ""))
+			else:
+				if is_capitalized(expression.pure_name()):
+					replacer.update((expression.name.start, expression.name.start, "new "))
 			self.error_messages.extend(replacer.error_messages)
 			return replacer.digest()
 
@@ -401,8 +410,12 @@ class DartSharpTranspiler(object):
 			return "List"
 
 		if isinstance(expression, FunctionInvocationElement):
-			if self.is_capitalized(expression.name.content()):
+			if is_capitalized(expression.pure_name()):
 				return expression.name.content()
+			pcn = expression.possible_class_name()
+			if pcn is not None:
+				return pcn
+			return None
 
 		if expression.content() == "true" or expression.content() == "false":
 			return "bool"
@@ -411,19 +424,6 @@ class DartSharpTranspiler(object):
 			return "int"
 
 		return None
-
-	def is_capitalized(self, word):
-		if word is None or word == "":
-			return False
-
-		if ord(word[0]) >= ord("A") and ord(word[0]) <= ord("Z"):
-			return True
-
-		if word[0] == "_" and len(word) > 1:
-			if ord(word[1]) >= ord("A") and ord(word[1]) <= ord("Z"):
-				return True
-
-		return False
 
 	def indented(self, text, steps=1):
 		return "%s%s" % (self.indent, text.replace("\n", "\n%s" % self.indent * steps))

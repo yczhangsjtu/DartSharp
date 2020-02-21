@@ -87,7 +87,6 @@ optional arguments:
 
 ## TODO
 
-- Optional const before function invocation
 - Support named parameter for function invocation
 - Replace all `for(final...)` with `for(var...)`
 - Add attribute initialization inside constructor body

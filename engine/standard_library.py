@@ -7,6 +7,7 @@ class StandardLibrary(object):
 		}
 		self.word_map = {
 			"Iterable": "IEnumerator",
+			"Function": "Action"
 		}
 
 	def get_namespace(self, dart_package):
