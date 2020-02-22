@@ -27,6 +27,7 @@ class DartSharpTranspiler(object):
     self.class_attributes = {}
     self.needed_namespaces = {}
     self.need_initialize = {}
+    self.setters = {}
     self.error_messages = []
 
   def using_namespace(self, namespace):
@@ -66,6 +67,21 @@ class DartSharpTranspiler(object):
 
     if attribute_name not in self.need_initialize[class_name]:
       self.need_initialize[class_name].append(attribute_name)
+
+  def add_setter(self, class_name, setter):
+    if class_name not in self.setters:
+      self.setters[class_name] = {}
+
+    self.setters[class_name][setter.name.content()] = setter
+
+  def get_setter(self, class_name, name):
+    if class_name not in self.setters:
+      return None
+
+    if name not in self.setters[class_name]:
+      return None
+
+    return self.setters[class_name][name]
 
   def transpile_dart_code(self, code):
     self.reset()
@@ -127,12 +143,21 @@ class DartSharpTranspiler(object):
       for func in class_block.functions:
         replacer.update((func.start, func.end, self.transpile_function(func)))
 
-    if class_block.getters is not None:
-      for getter in class_block.getters:
-        replacer.update((getter.start, getter.end, self.transpile_getter(getter)))
-
     if class_block.setters is not None:
       for setter in class_block.setters:
+        self.add_setter(class_block.name.content(), setter)
+
+    if class_block.getters is not None:
+      for getter in class_block.getters:
+        replacer.update((getter.start, getter.end, self.transpile_getter(getter, class_block.name.content())))
+        setter = self.get_setter(class_block.name.content(), getter.name.content())
+        if setter is not None:
+          del self.setters[class_block.name.content()][setter.name.content()]
+          replacer.update((setter.start, setter.end, ""))
+
+    if class_block.name.content() in self.setters:
+      for name in self.setters[class_block.name.content()]:
+        setter = self.setters[class_block.name.content()][name]
         replacer.update((setter.start, setter.end, self.transpile_setter(setter)))
 
     if class_block.constructors is not None:
@@ -233,7 +258,7 @@ class DartSharpTranspiler(object):
     self.error_messages.extend(replacer.error_messages)
     return replacer.digest()
 
-  def transpile_getter(self, getter):
+  def transpile_getter(self, getter, class_name):
     header_parts = []
 
     if not getter.name.content().startswith("_"):
@@ -251,7 +276,22 @@ class DartSharpTranspiler(object):
     else:
       body = getter.inside_content()
 
-    return "\n%s%s {\n%s%sget {\n%s%s%s\n%s%s}\n%s}" % (
+    setter = self.get_setter(class_name, getter.name.content())
+    if setter is None:
+      return "\n%s%s {\n%s%sget {\n%s%s%s\n%s%s}\n%s}" % (
+        getter.indentation,
+        header,
+        getter.indentation,
+        self.indent,
+        getter.indentation,
+        self.indent,
+        self.indented(body),
+        getter.indentation,
+        self.indent,
+        getter.indentation
+      )
+
+    return "\n%s%s {\n%s%sget {\n%s%s%s\n%s%s}\n\n%s%s%s\n%s}" % (
       getter.indentation,
       header,
       getter.indentation,
@@ -261,10 +301,13 @@ class DartSharpTranspiler(object):
       self.indented(body),
       getter.indentation,
       self.indent,
+      getter.indentation,
+      self.indent,
+      self.transpile_setter(setter, only_inside=True),
       getter.indentation
     )
 
-  def transpile_setter(self, setter):
+  def transpile_setter(self, setter, only_inside=False):
     header_parts = []
 
     if not setter.name.content().startswith("_"):
@@ -281,6 +324,15 @@ class DartSharpTranspiler(object):
       body = "%s;" % re.sub(r"\b%s\b" % setter.variable.content(), "value", setter.inside_content())
     else:
       body = re.sub(r"\b%s\b" % setter.variable.content(), "value", setter.inside_content())
+
+    if only_inside:
+      return "set {\n%s%s%s\n%s%s}" % (
+        setter.indentation,
+        self.indent,
+        self.indented(body),
+        setter.indentation,
+        self.indent,
+      )
 
     return "\n%s%s {\n%s%sset {\n%s%s%s\n%s%s}\n%s}" % (
       setter.indentation,
