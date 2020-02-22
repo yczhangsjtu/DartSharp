@@ -409,7 +409,7 @@ class FunctionModifierParser(object):
 class FunctionBlock(Block):
 	"""FunctionBlock"""
 	def __init__(self, text, start, end, indentation, header, inside_start, inside_end, is_arrow, modifiers,
-			variable_declares=None, for_in_blocks=None, statements=None):
+			variable_declares=None, for_in_blocks=None, statements=None, expression_body=None):
 		super(FunctionBlock, self).__init__(text, start, end, indentation)
 		self.header = header
 		self.typename = header.typename
@@ -425,6 +425,7 @@ class FunctionBlock(Block):
 		self.variable_declares = variable_declares
 		self.for_in_blocks = for_in_blocks
 		self.statements = statements
+		self.expression_body = expression_body
 
 	def inside_content(self):
 		return self.text[self.inside_start:self.inside_end]
@@ -443,6 +444,7 @@ class FunctionLocator(object):
 		self.variable_declare_locator = VariableDeclareLocator(indentation=outer_indentation+inner_indentation)
 		self.for_in_locator = ForInLocator(outer_indentation=outer_indentation+inner_indentation, inner_indentation=inner_indentation)
 		self.statement_locator = StatementLocator(indentation=outer_indentation+inner_indentation)
+		self.expression_parser = SimpleExpressionParser()
 
 	def locate(self, text, pos):
 		block = self.brace_function_locator.locate(text, pos)
@@ -469,8 +471,12 @@ class FunctionLocator(object):
 		inside_start = body_starter.span[1]
 		if is_arrow:
 			inside_end = block.end - 1
+			expression_body = self.expression_parser.parse(block.text, inside_start)
+			if expression_body is not None and expression_body.end > inside_end:
+				expression_body = None
 		else:
 			inside_end = block.end - 2
+			expression_body = None
 
 		variable_declares = None
 		if not is_arrow:
@@ -490,7 +496,7 @@ class FunctionLocator(object):
 
 		return FunctionBlock(block.text, block.start, block.end, block.indentation,\
 			block.element[1], inside_start, inside_end, is_arrow, modifiers,\
-			variable_declares, for_in_blocks, statements)
+			variable_declares, for_in_blocks, statements, expression_body)
 
 class ConstructorBlock(Block):
 	"""ConstructorBlock"""

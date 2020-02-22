@@ -2,7 +2,7 @@ from eregex.element import BasicElement, JoinElement
 from eregex.parser import StringParser, BoolParser,\
 	NumberParser, OrParser, WordDotParser, JoinParser,\
 	TypeNameParser, SpacePlainParser, OptionalParser,\
-	ListParser, EmptyParser, WordParser
+	ListParser, EmptyParser, WordParser, SpaceParser
 from eregex.locator import Block, BlockLocator, locate_all
 
 def is_capitalized(word):
@@ -137,6 +137,106 @@ class DartListParser(object):
 
 		return DartListElement(text, start, elem.end, elem.span, typename, elements, bracket, open_bracket, close_bracket)
 
+class RecursiveCounter:
+	def __init__(self, double_dot_level, double_question_mark_level):
+		self.double_dot_level = double_dot_level
+		self.double_question_mark_level = double_question_mark_level
+
+	def reduce_double_dot_level(self):
+		return RecursiveCounter(
+			self.double_dot_level-1,
+			self.double_question_mark_level,
+		)
+
+	def reduce_questoin_mark_level(self):
+		return RecursiveCounter(
+			self.double_dot_level,
+			self.double_question_mark_level-1,
+		)
+
+class AssignmentElement(BasicElement):
+	"""AssignmentElement"""
+	def __init__(self, text, start, end, span, left, right, sign):
+		super(AssignmentElement, self).__init__(text, start, end, span)
+		self.left = left
+		self.right = right
+		self.sign = sign
+
+class AssignmentParser(object):
+	"""AssignmentParser"""
+	def __init__(self, counter=RecursiveCounter(0,1)):
+		super(AssignmentParser, self).__init__()
+		self.parser = JoinParser([
+			WordDotParser(),
+			OrParser([SpacePlainParser("="), SpacePlainParser("??=")]),
+			SimpleExpressionParser(counter=counter)
+		])
+
+	def parse(self, text, pos):
+		elem = self.parser.parse(text, pos)
+		if elem is None:
+			return None
+
+		return AssignmentElement(text, elem.start, elem.end, elem.span, elem[0], elem[2], elem[1])
+
+class DoubleDotElement(BasicElement):
+	def __init__(self, text, start, end, span, expression, arms):
+		super(DoubleDotElement, self).__init__(text, start, end, span)
+		self.expression = expression
+		self.arms = arms
+
+class DoubleDotParser(object):
+	def __init__(self, counter):
+		super(DoubleDotParser, self).__init__()
+		self.parser = None
+		self.counter = counter
+
+	def parse(self, text, pos):
+		if self.parser is None:
+			self.parser = JoinParser([
+				SimpleExpressionParser(counter=self.counter.reduce_double_dot_level()),
+				ListParser(
+					JoinParser([
+						SpacePlainParser(".."),
+						OrParser([
+							AssignmentParser(),
+							FunctionInvocationParser(),
+						])
+					]),
+					SpaceParser(),
+				)
+			])
+		elem = self.parser.parse(text, pos)
+		if elem is None:
+			return elem
+
+		return DoubleDotElement(text, elem.start, elem.end, elem.span, elem[0], elem[1])
+
+class DoubleQuestionMarkElement(BasicElement):
+	def __init__(self, text, start, end, span, left, right):
+		super(DoubleQuestionMarkElement, self).__init__(text, start, end, span)
+		self.left = left
+		self.right = right
+
+class DoubleQuesionMarkParser(object):
+	def __init__(self, counter):
+		super(DoubleQuesionMarkParser, self).__init__()
+		self.parser = None
+		self.counter = counter
+
+	def parse(self, text, pos):
+		if self.parser is None:
+			self.parser = JoinParser([
+				SimpleExpressionParser(counter=self.counter.reduce_questoin_mark_level()),
+				SpacePlainParser("??"),
+				SimpleExpressionParser(counter=self.counter.reduce_questoin_mark_level())
+			])
+		elem = self.parser.parse(text, pos)
+		if elem is None:
+			return elem
+
+		return DoubleQuestionMarkElement(text, elem.start, elem.end, elem.span, elem[0], elem[1])
+
 class SimpleExpressionElement(BasicElement):
 	"""SimpleExpressionElement"""
 	def __init__(self, element):
@@ -145,16 +245,20 @@ class SimpleExpressionElement(BasicElement):
 
 class SimpleExpressionParser(object):
 	"""SimpleExpressionParser recognizes numbers, booleans or strings"""
-	def __init__(self):
+	def __init__(self, counter=RecursiveCounter(1,1)):
 		super(SimpleExpressionParser, self).__init__()
-		self.parser = OrParser([
-			FunctionInvocationParser(),
-			StringParser(),
-			BoolParser(),
-			NumberParser(),
-			WordDotParser(),
-			DartListParser()
-		])
+		options = []
+		if counter.double_dot_level > 0:
+			options.append(DoubleDotParser(counter))
+		if counter.double_question_mark_level > 0:
+			options.append(DoubleQuesionMarkParser(counter))
+		options.append(FunctionInvocationParser())
+		options.append(StringParser())
+		options.append(BoolParser())
+		options.append(NumberParser())
+		options.append(WordDotParser())
+		options.append(DartListParser())
+		self.parser = OrParser(options)
 
 	def parse(self, text, pos):
 		elem = self.parser.parse(text, pos)

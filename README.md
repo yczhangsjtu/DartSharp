@@ -87,7 +87,6 @@ optional arguments:
 
 ## TODO
 
-- Replace all double dots syntax
 - Transform interpolated strings into C# style
 - Handle abstract functions
 - Handle static functions

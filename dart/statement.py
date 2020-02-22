@@ -1,27 +1,9 @@
 from eregex.element import BasicElement
 from eregex.parser import WordDotParser, SpacePlainParser, JoinParser, OrParser
 from eregex.locator import LineLocator
-from dart.expression import FunctionInvocationParser, SimpleExpressionParser
+from dart.expression import FunctionInvocationParser, SimpleExpressionParser,\
+	AssignmentParser
 
-class AssignmentElement(BasicElement):
-	"""AssignmentElement"""
-	def __init__(self, text, start, end, span, left, right):
-		super(AssignmentElement, self).__init__(text, start, end, span)
-		self.left = left
-		self.right = right
-
-class AssignmentParser(object):
-	"""AssignmentParser"""
-	def __init__(self):
-		super(AssignmentParser, self).__init__()
-		self.parser = JoinParser([WordDotParser(), SpacePlainParser("="), SimpleExpressionParser()])
-
-	def parse(self, text, pos):
-		elem = self.parser.parse(text, pos)
-		if elem is None:
-			return None
-
-		return AssignmentElement(text, elem.start, elem.end, elem.span, elem[0], elem[2])
 
 class StatementElement(BasicElement):
 	"""StatementElement"""

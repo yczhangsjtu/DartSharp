@@ -1,5 +1,6 @@
 from dart.function import FunctionLocator, ConstructorLocator, VariableDeclareLocator
-from dart.expression import DartListElement, FunctionInvocationElement, is_capitalized
+from dart.expression import DartListElement, FunctionInvocationElement, DoubleDotElement,\
+  is_capitalized, AssignmentElement
 from dart.classes import ClassLocator, GetterLocator
 from dart.globals import ImportLocator, PartOfLocator, TypedefLocator
 from eregex.replacer import Replacer
@@ -276,6 +277,9 @@ class DartSharpTranspiler(object):
       for for_in_block in func.for_in_blocks:
         replacer.update((for_in_block.start, for_in_block.end, self.transpile_for_in_block(for_in_block)))
 
+    if func.expression_body is not None:
+      replacer.update((func.expression_body.start, func.expression_body.end, self.transpile_expression(func.expression_body)))
+
     self.error_messages.extend(replacer.error_messages)
     return replacer.digest()
 
@@ -283,6 +287,11 @@ class DartSharpTranspiler(object):
     element = statement.element
     if isinstance(element, FunctionInvocationElement):
       return "%s;" % self.transpile_function_invocation(element)
+    if isinstance(element, AssignmentElement):
+      if element.sign.content() == "??=":
+        left = element.left.content()
+        right = self.transpile_expression(element.right)
+        return "%s = %s ?? %s;" % (left, left, right)
     return statement.content()
 
   def transpile_getter(self, getter, class_name):
@@ -568,6 +577,18 @@ class DartSharpTranspiler(object):
         return "@\"%s\"" % expression.inside_content()
       else:
         return "\"%s\"" % expression.inside_content()
+
+    if isinstance(expression, DoubleDotElement):
+      replacer = Replacer(expression.text, expression.start, expression.end)
+      replacer.update((expression.expression.start, expression.expression.end, self.transpile_expression(expression.expression)))
+      for i in range(len(expression.arms)):
+        arm = expression.arms[i]
+        double_dots = arm[0]
+        replacer.update((double_dots.start, double_dots.start+1, "tmp"))
+      replacer.update((expression.arms.start, expression.arms.start, "/* "))
+      replacer.update((expression.arms.end, expression.arms.end, " */"))
+      self.error_messages.extend(replacer.error_messages)
+      return replacer.digest()
 
     return expression.content()
 
