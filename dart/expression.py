@@ -269,8 +269,9 @@ class SimpleExpressionParser(object):
 
 class ForInHeaderElement(BasicElement):
 	"""ForInHeaderElement"""
-	def __init__(self, text, start, end, span, typename, variable, collection):
+	def __init__(self, text, start, end, span, typename, variable, collection, forword):
 		super(ForInHeaderElement, self).__init__(text, start, end, span)
+		self.forword = forword
 		self.typename = typename
 		self.variable = variable
 		self.collection = collection
@@ -293,7 +294,7 @@ class ForInHeaderParser(object):
 		if elem is None:
 			return None
 
-		return ForInHeaderElement(text, elem.start, elem.end, elem.span, elem[2], elem[3], elem[5])
+		return ForInHeaderElement(text, elem.start, elem.end, elem.span, elem[2], elem[3], elem[5], elem[0])
 
 class ForInBlock(Block):
 	"""ForInBlock"""
@@ -303,6 +304,7 @@ class ForInBlock(Block):
 		self.typename = header.typename
 		self.variable = header.variable
 		self.collection = header.collection
+		self.forword = header.forword
 		self.for_in_blocks = for_in_blocks
 
 class ForInLocator(object):

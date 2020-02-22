@@ -518,6 +518,7 @@ class DartSharpTranspiler(object):
 
   def transpile_for_in_block(self, for_in_block):
     replacer = Replacer(for_in_block.text, for_in_block.start, for_in_block.end)
+    replacer.update((for_in_block.forword.start, for_in_block.forword.end, "foreach"))
     if for_in_block.typename.content() == "final":
       replacer.update((for_in_block.typename.start, for_in_block.typename.end, "var"))
     if for_in_block.for_in_blocks is not None:

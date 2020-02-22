@@ -87,10 +87,10 @@ optional arguments:
 
 ## TODO
 
-- Transform interpolated strings into C# style
+
 - Handle abstract functions
 - Handle static functions
 - Implement `if` and `while` block
 - Replace all `for(final...)` with `for(var...)`
-- Replace `for in` with `foreach in`
 - Replace all `final` variable declarations inside function
+- Transform interpolated strings into C# style
