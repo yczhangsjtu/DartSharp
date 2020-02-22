@@ -91,7 +91,7 @@ class FunctionInvocationParser(object):
 		if arguments.content() == "":
 			arguments = None
 
-		return FunctionInvocationElement(text, elem.start, elem.end, elem.span, func_name, arguments, modifier)
+		return FunctionInvocationElement(text, start, elem.end, elem.span, func_name, arguments, modifier)
 
 class DartListElement(BasicElement):
 	def __init__(self, text, start, end, span, typename=None, elements=None,

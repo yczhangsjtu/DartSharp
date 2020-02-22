@@ -264,6 +264,10 @@ class DartSharpTranspiler(object):
     if func.modifiers is not None:
       replacer.update((func.modifiers.start, func.modifiers.end, ""))
 
+    if func.statements is not None:
+      for statement in func.statements:
+        replacer.update((statement.start, statement.end, self.transpile_statement(statement)))
+
     if func.variable_declares is not None:
       for variable_declare in func.variable_declares:
         replacer.update((variable_declare.start, variable_declare.end, self.transpile_variable_declare(variable_declare, func.name)))
@@ -274,6 +278,12 @@ class DartSharpTranspiler(object):
 
     self.error_messages.extend(replacer.error_messages)
     return replacer.digest()
+
+  def transpile_statement(self, statement):
+    element = statement.element
+    if isinstance(element, FunctionInvocationElement):
+      return "%s;" % self.transpile_function_invocation(element)
+    return statement.content()
 
   def transpile_getter(self, getter, class_name):
     header_parts = []
@@ -408,6 +418,13 @@ class DartSharpTranspiler(object):
   def transpile_func_name(self, name):
     if name.content() in self.global_functions:
       return "%s.%s" % (self.global_class_name, name.content())
+
+    if name.content() == "super":
+      return "base"
+
+    if name.content().startswith("super."):
+      return "base%s" % name.content()[5:]
+
     return name.content()
 
   def transpile_constructor_header(self, header):
@@ -544,23 +561,7 @@ class DartSharpTranspiler(object):
       return replacer.digest()
 
     if isinstance(expression, FunctionInvocationElement):
-      replacer = Replacer(expression.text, expression.start, expression.end)
-      if expression.name in self.global_functions:
-        replacer.update((expression.name.start, expression.name.end, self.transpile_func_name(expression.name)))
-      if expression.arguments is not None:
-        for i in range(len(expression.arguments)):
-          replacer.update((expression.arguments[i].value.start, expression.arguments[i].value.end, self.transpile_expression(expression.arguments[i].value)))
-      if expression.modifier is not None:
-        if expression.modifier.content() == "const":
-          if is_capitalized(expression.pure_name()):
-            replacer.update((expression.modifier.start, expression.modifier.end, "new"))
-          else:
-            replacer.update((expression.modifier.start, expression.modifier.end, ""))
-      else:
-        if is_capitalized(expression.pure_name()):
-          replacer.update((expression.name.start, expression.name.start, "new "))
-      self.error_messages.extend(replacer.error_messages)
-      return replacer.digest()
+      return self.transpile_function_invocation(expression)
 
     if isinstance(expression, StringElement):
       if expression.is_raw:
@@ -569,6 +570,25 @@ class DartSharpTranspiler(object):
         return "\"%s\"" % expression.inside_content()
 
     return expression.content()
+
+  def transpile_function_invocation(self, function_invocation):
+    expression = function_invocation
+    replacer = Replacer(expression.text, expression.start, expression.end)
+    replacer.update((expression.name.start, expression.name.end, self.transpile_func_name(expression.name)))
+    if expression.arguments is not None:
+      for i in range(len(expression.arguments)):
+        replacer.update((expression.arguments[i].value.start, expression.arguments[i].value.end, self.transpile_expression(expression.arguments[i].value)))
+    if expression.modifier is not None:
+      if expression.modifier.content() == "const":
+        if is_capitalized(expression.pure_name()):
+          replacer.update((expression.modifier.start, expression.modifier.end, "new"))
+        else:
+          replacer.update((expression.modifier.start, expression.modifier.end, ""))
+    else:
+      if is_capitalized(expression.pure_name()):
+        replacer.update((expression.name.start, expression.name.start, "new "))
+    self.error_messages.extend(replacer.error_messages)
+    return replacer.digest()
 
   def deduce_type(self, value):
     expression = value.expression
