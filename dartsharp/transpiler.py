@@ -434,6 +434,11 @@ class DartSharpTranspiler(object):
     if name.content().startswith("super."):
       return "base%s" % name.content()[5:]
 
+    for engine in self.engines:
+      mapped_word = engine.map_word(name.content())
+      if mapped_word is not None:
+        return mapped_word
+
     return name.content()
 
   def transpile_constructor_header(self, header):
@@ -528,6 +533,16 @@ class DartSharpTranspiler(object):
     return replacer.digest()
 
   def transpile_typename(self, typename):
+    if isinstance(typename, str):
+      for engine in self.engines:
+        namespace = engine.require_namespace(typename)
+        if namespace is not None:
+          self.using_namespace(namespace)
+        mapped_word = engine.map_word(typename)
+        if mapped_word is not None:
+          return mapped_word
+      return typename
+
     if typename.content() == "String":
       return "string"
 
@@ -634,10 +649,10 @@ class DartSharpTranspiler(object):
 
     if isinstance(expression, FunctionInvocationElement):
       if is_capitalized(expression.pure_name()):
-        return expression.name.content()
+        return self.transpile_typename(expression.name.content())
       pcn = expression.possible_class_name()
       if pcn is not None:
-        return pcn
+        return self.transpile_typename(pcn)
       return None
 
     if expression.content() == "true" or expression.content() == "false":

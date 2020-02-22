@@ -4,10 +4,12 @@ class StandardLibrary(object):
 		self.package_namespace_map = {
 		}
 		self.keyword_namespace_map = {
+			"RegExp": "System.Text.RegularExpressions",
 		}
 		self.word_map = {
 			"Iterable": "IEnumerator",
-			"Function": "Action"
+			"Function": "Action",
+			"RegExp": "Regex",
 		}
 
 	def get_namespace(self, dart_package):
