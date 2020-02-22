@@ -121,6 +121,9 @@ class ClassLocator(object):
 		self.getter_locator = GetterLocator(
 			outer_indentation=outer_indentation+inner_indentation,
 			inner_indentation=inner_indentation)
+		self.setter_locator = SetterLocator(
+			outer_indentation=outer_indentation+inner_indentation,
+			inner_indentation=inner_indentation)
 		self.variable_declare_locator =VariableDeclareLocator(indentation=inner_indentation)
 		self.outer_indentation = outer_indentation
 		self.inner_indentation = inner_indentation
@@ -145,6 +148,10 @@ class ClassLocator(object):
 		getters = self.getter_locator.locate_all(class_block.text, class_block.inside_start, class_block.inside_end)
 		if len(getters) > 0:
 			class_block.getters = getters
+
+		setters = self.setter_locator.locate_all(class_block.text, class_block.inside_start, class_block.inside_end)
+		if len(setters) > 0:
+			class_block.setters = setters
 
 		constructor_locator = ConstructorLocator(
 			class_block.name.name.content(),
@@ -244,3 +251,97 @@ class GetterLocator(object):
 
 		return GetterBlock(block.text, block.start, block.end, block.indentation,\
 			modifiers, block.element[1], block.element[3], inside_start, inside_end, is_arrow)
+
+class SetterBlock(Block):
+	"""SetterBlock: set name(typename variable) => body;
+	                set name(typename variable) { body; }"""
+	def __init__(self, text, start, end, indentation, modifiers,\
+			name, typename, variable, inside_start, inside_end, is_arrow):
+		super(SetterBlock, self).__init__(text, start, end, indentation)
+		self.modifiers = modifiers
+		self.name = name
+		self.typename = typename
+		self.variable = variable
+		self.inside_start = inside_start
+		self.inside_end = inside_end
+		self.is_arrow = is_arrow
+		self.override = False
+		if modifiers is not None:
+			self.override = modifiers.contains("override")
+
+	def inside_content(self):
+		return self.text[self.inside_start:self.inside_end]
+
+class SetterLocator(object):
+
+	def __init__(self, outer_indentation="", inner_indentation="  "):
+		super(SetterLocator, self).__init__()
+		self.brace_locator = BlockLocator(
+			JoinParser([FunctionModifierParser(),
+				SpacePlainParser("set"),
+				WordParser(),
+				SpacePlainParser("("),
+				TypeNameParser(),
+				WordParser(),
+				SpacePlainParser(")"),
+				SpacePlainParser("{")]),
+			indentation=outer_indentation)
+		self.arrow_locator = BlockLocator(
+			JoinParser([FunctionModifierParser(),
+				SpacePlainParser("set"),
+				WordParser(),
+				SpacePlainParser("("),
+				TypeNameParser(),
+				WordParser(),
+				SpacePlainParser(")"),
+				SpacePlainParser("=>")]),
+			endchar=";",
+			indentation=outer_indentation)
+
+	def locate(self, text, pos):
+		block = self.brace_locator.locate(text, pos)
+
+		if block is None:
+			block = self.arrow_locator.locate(text, pos)
+
+		if block is None:
+			return None
+
+		return self.create_setter_block(block)
+
+	def locate_all(self, text, start=0, end=-1):
+		return locate_all(self, text, start, end)
+
+	def create_setter_block(self, block):
+		if isinstance(block.element[0], FunctionModifierElement):
+			modifiers = block.element[0]
+		else:
+			modifiers = None
+
+		body_starter = block.element[-1]
+		is_arrow = body_starter.content() == "=>"
+		inside_start = body_starter.span[1]
+		if is_arrow:
+			inside_end = block.end - 1
+		else:
+			inside_end = block.end - 2
+
+		"""
+		variable_declares = None
+		if not is_arrow:
+			variable_declares = self.variable_declare_locator.locate_all(block.text, block.start, block.end)
+			if len(variable_declares) == 0:
+				variable_declares = None
+		"""
+
+		"""
+		for_in_blocks = None
+		if not is_arrow:
+			for_in_blocks = self.for_in_locator.locate_all(block.text, block.start, block.end)
+			if len(for_in_blocks) == 0:
+				for_in_blocks = None
+		"""
+
+		return SetterBlock(block.text, block.start, block.end, block.indentation,\
+			modifiers, block.element[2], block.element[4], block.element[5],\
+			inside_start, inside_end, is_arrow)

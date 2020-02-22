@@ -4,6 +4,7 @@ from dart.classes import ClassLocator, GetterLocator
 from dart.globals import ImportLocator, PartOfLocator
 from eregex.replacer import Replacer
 from eregex.element import NumberElement, StringElement
+import re
 
 class DartSharpTranspiler(object):
   """DartSharpTranspiler"""
@@ -130,6 +131,10 @@ class DartSharpTranspiler(object):
       for getter in class_block.getters:
         replacer.update((getter.start, getter.end, self.transpile_getter(getter)))
 
+    if class_block.setters is not None:
+      for setter in class_block.setters:
+        replacer.update((setter.start, setter.end, self.transpile_setter(setter)))
+
     if class_block.constructors is not None:
       for constructor in class_block.constructors:
         replacer.update((constructor.start, constructor.end, self.transpile_constructor(constructor)))
@@ -252,11 +257,42 @@ class DartSharpTranspiler(object):
       getter.indentation,
       self.indent,
       getter.indentation,
-      self.indent * 2,
-      body,
+      self.indent,
+      self.indented(body),
       getter.indentation,
       self.indent,
       getter.indentation
+    )
+
+  def transpile_setter(self, setter):
+    header_parts = []
+
+    if not setter.name.content().startswith("_"):
+      header_parts.append("public")
+
+    if setter.override:
+      header_parts.append("override")
+
+    header_parts.append(self.transpile_typename(setter.typename))
+    header_parts.append(setter.name.content())
+
+    header = " ".join(header_parts)
+    if setter.is_arrow:
+      body = "%s;" % re.sub(r"\b%s\b" % setter.variable.content(), "value", setter.inside_content())
+    else:
+      body = re.sub(r"\b%s\b" % setter.variable.content(), "value", setter.inside_content())
+
+    return "\n%s%s {\n%s%sset {\n%s%s%s\n%s%s}\n%s}" % (
+      setter.indentation,
+      header,
+      setter.indentation,
+      self.indent,
+      setter.indentation,
+      self.indent,
+      self.indented(body),
+      setter.indentation,
+      self.indent,
+      setter.indentation
     )
 
   def transpile_constructor(self, constructor):

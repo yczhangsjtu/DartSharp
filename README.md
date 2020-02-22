@@ -87,7 +87,7 @@ optional arguments:
 
 ## TODO
 
-- Recognize setters and getters
+- Recognize setters and combine them with corresponding getters
 - Recognize function typedef and replace function typedefs with delegates
 - Replace all double dots syntax
 - Transform interpolated strings into C# style
