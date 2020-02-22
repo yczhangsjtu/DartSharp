@@ -1,7 +1,7 @@
 from dart.function import FunctionLocator, ConstructorLocator, VariableDeclareLocator
 from dart.expression import DartListElement, FunctionInvocationElement, is_capitalized
 from dart.classes import ClassLocator, GetterLocator
-from dart.globals import ImportLocator, PartOfLocator
+from dart.globals import ImportLocator, PartOfLocator, TypedefLocator
 from eregex.replacer import Replacer
 from eregex.element import NumberElement, StringElement
 import re
@@ -16,6 +16,7 @@ class DartSharpTranspiler(object):
     self.class_locator = ClassLocator(inner_indentation=indent)
     self.function_locator = FunctionLocator(inner_indentation=indent)
     self.variable_declare_locator = VariableDeclareLocator(indentation="")
+    self.typedef_locator = TypedefLocator(indentation="")
     self.double_to_float = double_to_float
     self.indent = indent
     self.engines = engines
@@ -123,6 +124,10 @@ class DartSharpTranspiler(object):
     for class_block in class_blocks:
       replacer.update((class_block.start, class_block.end, self.transpile_class(class_block)))
 
+    typedefs = self.typedef_locator.locate_all(code)
+    for typedef in typedefs:
+      replacer.update((typedef.start, typedef.end, self.transpile_typedef(typedef)))
+
     replacer.update((0, 0, self.front_matter()))
 
     self.error_messages.extend(replacer.error_messages)
@@ -191,6 +196,19 @@ class DartSharpTranspiler(object):
 
     return " ".join(words)
 
+  def transpile_typedef(self, typedef):
+    items = []
+    if not typedef.name.content().startswith("_"):
+      items.append("public")
+
+    items.append("delegate")
+
+    header = self.transpile_funcheader(typedef.header, override=False)
+    if header.startswith("public "):
+      header = header[7:]
+    items.append(header)
+    return "%s;" % " ".join(items)
+
   def transpile_attribute(self, attribute, class_name=None):
     items = []
     if not attribute.name.content().startswith("_"):
@@ -213,7 +231,6 @@ class DartSharpTranspiler(object):
         self.class_attributes[class_name.name.content()][attribute.name.content()] = typename
 
     items.append(attribute.name.content())
-
 
     if attribute.default_value is not None:
       items.append("=")

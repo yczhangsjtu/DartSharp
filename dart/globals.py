@@ -2,6 +2,7 @@ from eregex.element import BasicElement
 from eregex.parser import JoinParser, StringParser, SpacePlainParser, WordParser,\
 	OptionalParser, OrParser
 from eregex.locator import LineLocator
+from dart.function import FunctionHeaderParser
 
 class ImportElement(BasicElement):
 	def __init__(self, text, start, end, span, target, alias=None, show=None):
@@ -74,3 +75,35 @@ class PartOfLocator(LineLocator):
 	"""PartOfLocator"""
 	def __init__(self, indentation=""):
 		super(PartOfLocator, self).__init__(PartOfParser(), indentation=indentation)
+
+class TypedefElement(BasicElement):
+	"""TypedefElement"""
+	def __init__(self, text, start, end, span, header):
+		super(TypedefElement, self).__init__(text, start, end, span)
+		self.header = header
+		self.typename = header.typename
+		self.name = header.name
+		self.parameter_list = header.parameter_list
+
+class TypedefParser(object):
+	"""TypedefParser"""
+	def __init__(self):
+		super(TypedefParser, self).__init__()
+		self.parser = JoinParser([
+			SpacePlainParser("typedef"),
+			FunctionHeaderParser(),
+			SpacePlainParser(";")
+		])
+
+	def parse(self, text, pos):
+		elem = self.parser.parse(text, pos)
+		if elem is None:
+			return None
+
+		funcheader = elem[1]
+		return TypedefElement(text, elem.start, elem.end, elem.span, funcheader)
+
+class TypedefLocator(LineLocator):
+	"""TypedefLocator"""
+	def __init__(self, indentation=""):
+		super(TypedefLocator, self).__init__(TypedefParser(), indentation=indentation)
