@@ -1,3 +1,5 @@
+import re
+
 class FlutterToUIWidgetsEngine(object):
 	def __init__(self):
 		super(FlutterToUIWidgetsEngine, self).__init__()
@@ -20,6 +22,14 @@ class FlutterToUIWidgetsEngine(object):
 		}
 		self.word_map = {
 		}
+		self.class_names = [
+			"Align", "DecoratedBox", "BoxDecoration", "ImageLayout", "Text",
+			"AssetImage", "MemoryImage", "Padding", "Table", "RichText"
+		]
+		self.patterns = [
+			(re.compile(r"(\breturn\b|[?:()])\s*(%s)(\s*\()" % "|".join(self.class_names)), r"\1 new \2\3"),
+			(re.compile(r"\.(isNotEmpty|isEmpty|first|last)(\s+|[;.()])"), r".\1()\2"),
+		]
 
 	def get_namespace(self, dart_package):
 		if dart_package in self.package_namespace_map:
@@ -35,3 +45,8 @@ class FlutterToUIWidgetsEngine(object):
 		if word in self.word_map:
 			return self.word_map[word]
 		return None
+
+	def post_process(self, text):
+		for pattern in self.patterns:
+			text = pattern[0].sub(pattern[1], text)
+		return text

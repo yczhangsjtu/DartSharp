@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from dartsharp import DartSharpTranspiler
+from dartsharp import DartSharpTranspiler, PostProcessor
 from engine import flutter_to_uiwidgets, standard_library
 
 import argparse, sys, os
@@ -24,12 +24,18 @@ if __name__ == '__main__':
 		fin = sys.stdin
 		utils_class_name = "Utils"
 
-	transpiler = DartSharpTranspiler(engines=[
-		flutter_to_uiwidgets,
-		standard_library,
-	], global_class_name=utils_class_name)
+	engines=[
+			flutter_to_uiwidgets,
+			standard_library,
+		]
+	transpiler = DartSharpTranspiler(engines=engines, global_class_name=utils_class_name)
+	post_processor = PostProcessor()
 
 	result = transpiler.transpile_dart_code(fin.read())
+	result = post_processor.post_process(result)
+	for engine in engines:
+		result = engine.post_process(result)
+
 	sys.stderr.write("\n".join(transpiler.error_messages))
 	if len(transpiler.error_messages) > 0:
 		sys.stderr.write("\n")

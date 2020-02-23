@@ -300,11 +300,12 @@ class ConstructorParameterListParser(ParameterListParser):
 
 class FunctionHeaderElement(BasicElement):
 	"""docstring for FunctionHeaderElement"""
-	def __init__(self, text, end, typename, name, parameter_list, span):
-		super(FunctionHeaderElement, self).__init__(text, typename.start, end, span)
+	def __init__(self, text, start, end, typename, name, parameter_list, span, static):
+		super(FunctionHeaderElement, self).__init__(text, start, end, span)
 		self.typename = typename
 		self.name = name
 		self.parameter_list = parameter_list
+		self.static = static
 
 _function_header_parser = None
 class _FunctionHeaderParser(object):
@@ -312,6 +313,7 @@ class _FunctionHeaderParser(object):
 	def __init__(self):
 		super(_FunctionHeaderParser, self).__init__()
 		self.parser = JoinParser([
+			OptionalParser(SpacePlainParser("static")),
 			TypeNameParser(),
 			SpaceParser(),
 			TypeNameParser(),
@@ -325,12 +327,16 @@ class _FunctionHeaderParser(object):
 		if elem is None:
 			return None
 
-		typename, name, parameter_list = elem[0], elem[2], elem[4]
+		static, typename, name, parameter_list = elem[0], elem[1], elem[3], elem[5]
+		if static.content() == "":
+			static, start = None, typename.start
+		else:
+			start = elem.start
 
 		if typename.content() == "set":
 			return None
 
-		return FunctionHeaderElement(text, elem.end, typename, name, parameter_list, elem.span)
+		return FunctionHeaderElement(text, start, elem.end, typename, name, parameter_list, elem.span, static)
 
 class FunctionHeaderParser(object):
 	"""FunctionHeaderParser"""

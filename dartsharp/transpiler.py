@@ -415,6 +415,8 @@ class DartSharpTranspiler(object):
     name_parts = []
     if not header.name.content().startswith("_"):
       name_parts.append("public")
+    if header.static is not None:
+      name_parts.append("static")
     if override:
       name_parts.append("override")
     if self.double_to_float and self.transpile_typename(header.typename) == "double":
@@ -425,21 +427,27 @@ class DartSharpTranspiler(object):
     return "%s(%s)" % (" ".join(name_parts), self.transpile_parameter_list(header.parameter_list))
 
   def transpile_func_name(self, name):
-    if name.content() in self.global_functions:
-      return "%s.%s" % (self.global_class_name, name.content())
+    if not isinstance(name, str):
+      name = name.content()
+    if name in self.global_functions or name in self.global_variables:
+      return "%s.%s" % (self.global_class_name, name)
 
-    if name.content() == "super":
+    if name == "super":
       return "base"
 
-    if name.content().startswith("super."):
-      return "base%s" % name.content()[5:]
+    if name.startswith("super."):
+      return "base%s" % name[5:]
 
     for engine in self.engines:
-      mapped_word = engine.map_word(name.content())
+      mapped_word = engine.map_word(name)
       if mapped_word is not None:
         return mapped_word
 
-    return name.content()
+    name_parts = name.split('.')
+    if len(name_parts) > 1:
+      return ".".join([self.transpile_func_name(name_part) for name_part in name_parts])
+
+    return name
 
   def transpile_constructor_header(self, header):
     replacer = Replacer(header.text, header.start, header.end)
@@ -572,9 +580,9 @@ class DartSharpTranspiler(object):
       self.using_namespace("System.Collections.Generic")
       replacer = Replacer(expression.text, expression.start, expression.end)
       if expression.typename is not None:
-        replacer.update((expression.bracket.start, expression.bracket.end, "List<%s>" % self.transpile_typename(expression.typename)))
+        replacer.update((expression.bracket.start, expression.bracket.end, "new List<%s>" % self.transpile_typename(expression.typename)))
       else:
-        replacer.update((expression.start, expression.start, "List"))
+        replacer.update((expression.start, expression.start, "new List"))
       if expression.elements is None:
         replacer.update((expression.open_bracket.start, expression.close_bracket.end, "()"))
       else:
@@ -592,6 +600,8 @@ class DartSharpTranspiler(object):
       if expression.is_raw:
         return "@\"%s\"" % expression.inside_content()
       else:
+        if expression.inside_content().find("${") >= 0:
+          return "$\"%s\"" % expression.inside_content().replace("${", "{")
         return "\"%s\"" % expression.inside_content()
 
     if isinstance(expression, DoubleDotElement):
