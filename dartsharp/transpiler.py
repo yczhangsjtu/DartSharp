@@ -1,4 +1,5 @@
-from dart.function import FunctionLocator, ConstructorLocator, VariableDeclareLocator
+from dart.function import FunctionLocator, ConstructorLocator, VariableDeclareLocator,\
+  FunctionalParameterItemElement
 from dart.expression import DartListElement, FunctionInvocationElement, DoubleDotElement,\
   is_capitalized, AssignmentElement
 from dart.classes import ClassLocator, GetterLocator
@@ -494,7 +495,32 @@ class DartSharpTranspiler(object):
       default_value = self.transpile_expression(parameter_item.default_value)
 
     typename = None
-    if parameter_item.typename is not None:
+
+    if isinstance(parameter_item.element, FunctionalParameterItemElement):
+      self.using_namespace("System")
+      if parameter_item.typename.content() == "void":
+        if parameter_item.element.function_header.parameter_list is None:
+          typename = "Action"
+        else:
+          types = []
+          if parameter_item.positioned is not None:
+            for i in range(len(parameter_item.positioned)):
+              types.append(self.transpile_typename(parameter_item.positioned[i].typename))
+          if parameter_item.named is not None:
+            for i in range(len(parameter_item.named)):
+              types.append(self.transpile_typename(parameter_item.named[i].typename))
+          typename = "Action<%s>" % ", ".join(types)
+      else:
+        types = []
+        if parameter_item.positioned is not None:
+          for i in range(len(parameter_item.element.function_header.parameter_list.positioned)):
+            types.append(self.transpile_typename(parameter_item.element.parameter_list.positioned[i].typename))
+        if parameter_item.named is not None:
+          for i in range(len(parameter_item.named)):
+            types.append(self.transpile_typename(parameter_item.named[i].typename))
+        types.append(self.transpile_typename(parameter_item.typename))
+        typename = "Function<%s>" % ", ".join(types)
+    elif parameter_item.typename is not None:
       typename = self.transpile_typename(parameter_item.typename)
       if self.double_to_float and typename == "double":
         typename = "float"
@@ -523,6 +549,7 @@ class DartSharpTranspiler(object):
       items.append(typename)
 
     items.append(parameter_item.name.content())
+
     if default_value is not None:
       items.append("=")
       items.append(default_value)

@@ -29,6 +29,7 @@ class FlutterToUIWidgetsEngine(object):
 		self.patterns = [
 			(re.compile(r"(\breturn\b|[?:()])\s*(%s)(\s*\()" % "|".join(self.class_names)), r"\1 new \2\3"),
 			(re.compile(r"\.(isNotEmpty|isEmpty|first|last)(\s+|[;.()])"), r".\1()\2"),
+			(re.compile(r"\bassert\(([^)]*)\)[,;]"), r"D.assert(\1);")
 		]
 
 	def get_namespace(self, dart_package):

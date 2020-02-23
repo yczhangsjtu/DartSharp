@@ -99,6 +99,9 @@ class FunctionalParameterItemElement(BasicElement):
 			end, spanend = default_value.end, default_value.span[1]
 		super(FunctionalParameterItemElement, self).__init__(text, function_header.start, end, (function_header.span[0], spanend))
 		self.function_header = function_header
+		self.parameter_list = function_header.parameter_list
+		self.named = function_header.named
+		self.positioned = function_header.positioned
 		self.name = function_header.name
 		self.typename = function_header.typename
 		self.default_value = default_value
@@ -135,11 +138,16 @@ class ParameterItemElement(BasicElement):
 	def __init__(self, text, start, end, span, element, required=False):
 		super(ParameterItemElement, self).__init__(text, start, end, span)
 		self.element = element
-		self.is_this = type(element) is ThisParameterItemElement
-		if type(element) is NormalParameterItemElement or type(element) is FunctionalParameterItemElement:
+		self.is_this = isinstance(element, ThisParameterItemElement)
+		if isinstance(element, NormalParameterItemElement) or isinstance(element, FunctionalParameterItemElement):
 			self.typename = element.typename
 		else:
 			self.typename = None
+		if isinstance(element, FunctionalParameterItemElement):
+			self.function_header = element.function_header
+			self.parameter_list = element.parameter_list
+			self.named = element.function_header.named
+			self.positioned = element.function_header.positioned
 		self.name = element.name
 		self.default_value = element.default_value
 		self.required = required
@@ -305,6 +313,8 @@ class FunctionHeaderElement(BasicElement):
 		self.typename = typename
 		self.name = name
 		self.parameter_list = parameter_list
+		self.positioned = parameter_list.positioned
+		self.named = parameter_list.named
 		self.static = static
 
 _function_header_parser = None
