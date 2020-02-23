@@ -293,6 +293,10 @@ class DartSharpTranspiler(object):
         left = element.left.content()
         right = self.transpile_expression(element.right)
         return "%s = %s ?? %s;" % (left, left, right)
+      elif element.sign.content() == "=":
+        left = element.left.content()
+        right = self.transpile_expression(element.right)
+        return "%s = %s;" % (left, right)
     return statement.content()
 
   def transpile_getter(self, getter, class_name):
@@ -440,6 +444,9 @@ class DartSharpTranspiler(object):
       return "base%s" % name[5:]
 
     for engine in self.engines:
+      namespace = engine.require_namespace(name)
+      if namespace is not None:
+        self.using_namespace(namespace)
       mapped_word = engine.map_word(name)
       if mapped_word is not None:
         return mapped_word
@@ -578,6 +585,9 @@ class DartSharpTranspiler(object):
           return mapped_word
       return typename
 
+    if typename.content() == "double" and self.double_to_float:
+      return "float"
+
     if typename.content() == "String":
       return "string"
 
@@ -642,6 +652,10 @@ class DartSharpTranspiler(object):
       replacer.update((expression.arms.end, expression.arms.end, " */"))
       self.error_messages.extend(replacer.error_messages)
       return replacer.digest()
+
+    if isinstance(expression, NumberElement):
+      if expression.frac_part is not None and self.double_to_float:
+        return "%sf" % expression.content()
 
     return expression.content()
 

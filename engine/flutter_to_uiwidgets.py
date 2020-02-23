@@ -16,18 +16,27 @@ class FlutterToUIWidgetsEngine(object):
 		}
 		self.keyword_namespace_map = {
 			"TextStyle" : "Unity.UIWidgets.painting",
+			"ImageProvider" : "Unity.UIWidgets.painting",
 			"TextSpan": "Unity.UIWidgets.paiting",
 			"GestureRecognizer": "Unity.UIWidgets.gestures",
+			"GestureTapCallback": "Unity.UIWidgets.gestures",
+			"VoidCallback": "Unity.UIWidgets.ui",
 			"Color": "Unity.UIWidgets.ui",
+			"Size": "Unity.UIWidgets.ui",
+			"Widget": "Unity.UIWidgets.widgets",
+			"BoxConstraints": "Unity.UIWidgets.rendering",
+			"Key": "Unity.UIWidgets.foundation",
 		}
 		self.word_map = {
 		}
 		self.class_names = [
 			"Align", "DecoratedBox", "BoxDecoration", "ImageLayout", "Text",
-			"AssetImage", "MemoryImage", "Padding", "Table", "RichText"
+			"AssetImage", "MemoryImage", "Padding", "Table", "RichText",
+			"SizedBox", "Image", "Size", "ImageStreamListener", "Positioned",
+			"TextSpan",
 		]
 		self.patterns = [
-			(re.compile(r"(\breturn\b|[?:()])\s*(%s)(\s*\()" % "|".join(self.class_names)), r"\1 new \2\3"),
+			(re.compile(r"(\breturn\b|[?:()=])\s*(%s)(\s*\()" % "|".join(self.class_names)), r"\1 new \2\3"),
 			(re.compile(r"\.(isNotEmpty|isEmpty|first|last)(\s+|[;.()])"), r".\1()\2"),
 			(re.compile(r"\bassert\(([^)]*)\)[,;]"), r"D.assert(\1);")
 		]

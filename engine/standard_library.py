@@ -7,16 +7,20 @@ class StandardLibrary(object):
 		}
 		self.keyword_namespace_map = {
 			"RegExp": "System.Text.RegularExpressions",
+			"Iterable": "System.Collections.Generic",
+			"StringBuffer": "System.Text",
 		}
 		self.word_map = {
-			"Iterable": "IEnumerator",
+			"Iterable": "IEnumerable",
 			"Function": "Action",
 			"RegExp": "Regex",
+			"StringBuffer": "StringBuilder",
 		}
 		self.patterns = [
-			(re.compile(r"(\breturn\b|[?:()])\s*(Regex)\b"), r"\1 new \2"),
+			(re.compile(r"(\breturn\b|[?:()=])\s*(Regex)\b"), r"\1 new \2"),
 			(re.compile(r"\.moveNext\(\)"), r".MoveNext()"),
 			(re.compile(r"\.addAll\("), r".AddRange("),
+			(re.compile(r"\bIterable\b"), r"IEnumerable"),
 		]
 
 	def get_namespace(self, dart_package):
