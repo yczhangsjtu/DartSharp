@@ -17,7 +17,7 @@ class FlutterToUIWidgetsEngine(object):
 		self.keyword_namespace_map = {
 			"TextStyle" : "Unity.UIWidgets.painting",
 			"ImageProvider" : "Unity.UIWidgets.painting",
-			"TextSpan": "Unity.UIWidgets.paiting",
+			"TextSpan": "Unity.UIWidgets.painting",
 			"GestureRecognizer": "Unity.UIWidgets.gestures",
 			"GestureTapCallback": "Unity.UIWidgets.gestures",
 			"VoidCallback": "Unity.UIWidgets.ui",
